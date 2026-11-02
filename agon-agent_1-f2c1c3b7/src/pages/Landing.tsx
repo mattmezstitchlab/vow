@@ -1,398 +1,267 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   CalendarCheck,
   CalendarDays,
   Check,
   CreditCard,
-  ExternalLink,
   Lock,
   Music2,
+  Plus,
   ShieldCheck,
   Sparkles,
-  Store,
-  Wallet,
 } from 'lucide-react'
-import { Badge, Button, Card, SectionTitle, Stars } from '../components/ui'
-import { DemoNotice } from '../components/DemoNotice'
-import { listProviders } from '../lib/store'
-import type { ProviderInstance } from '../lib/types'
-import { money } from '../lib/format'
+import { Brand, BrandMark } from '../components/Brand'
+import { listBookings, listProviders } from '../lib/store'
+import type { Booking, ProviderInstance } from '../lib/types'
+import { formatDateShort, money } from '../lib/format'
+import { cardGradient, strapColor } from '../lib/theme'
+import { cn } from '../lib/utils'
 
 const STEPS = [
-  {
-    icon: Music2,
-    title: 'Le client choisit sa formule',
-    text: 'Formules, options, tarifs : tout est affiché, sans appel ni devis à attendre.',
-  },
-  {
-    icon: CalendarDays,
-    title: 'Il propose une date',
-    text: 'Les dates indisponibles sont bloquées. La demande part chez le prestataire en un clic.',
-  },
-  {
-    icon: CalendarCheck,
-    title: 'Le prestataire confirme',
-    text: 'Le back-office confirme la date, ajuste les options et l’acompte se calcule seul.',
-  },
-  {
-    icon: CreditCard,
-    title: 'L’acompte est encaissé',
-    text: 'Le client paie sur son lien sécurisé. Le prestataire voit le règlement tomber.',
-  },
+  { icon: Music2, title: 'Choisir', text: 'Formules, options, tarifs. Tout est clair, dès la première visite.' },
+  { icon: CalendarDays, title: 'Proposer', text: 'Une date, un lieu, quelques mots. La demande part en un instant.' },
+  { icon: CalendarCheck, title: 'Confirmer', text: 'Le prestataire valide la date et ajuste les options si besoin.' },
+  { icon: CreditCard, title: 'Réserver', text: 'L’acompte est réglé sur le lien du prestataire. Pas de partage.' },
 ]
 
 export default function Landing() {
   const [providers, setProviders] = useState<ProviderInstance[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
 
   useEffect(() => {
-    listProviders().then(setProviders)
+    let active = true
+    listProviders().then(async (list) => {
+      if (!active) return
+      setProviders(list)
+      if (list[0]) {
+        const b = await listBookings(list[0].id)
+        if (active) setBookings(b)
+      }
+    })
+    return () => { active = false }
   }, [])
 
+  const hero = providers[0]
+
   return (
-    <div className="min-h-screen bg-paper">
-      {/* ------------------------------------------------------------ nav */}
-      <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-accent">
-              <Music2 className="h-5 w-5" />
-            </span>
-            <span className="font-display text-xl leading-none text-ink">Cadence</span>
-          </Link>
-          <nav className="hidden items-center gap-7 text-[13px] font-medium text-ink/70 md:flex">
-            <a href="#processus" className="transition-colors hover:text-ink">
-              Comment ça marche
-            </a>
-            <a href="#prestataires" className="transition-colors hover:text-ink">
-              Prestataires
-            </a>
-            <a href="#backoffice" className="transition-colors hover:text-ink">
-              Espace prestataire
-            </a>
-            <Link to="/studio" className="transition-colors hover:text-ink">
-              Studio
-            </Link>
+    <div className="min-h-screen bg-paper text-ink">
+      {/* Navigation épurée, sans bordure, comme une page produit. */}
+      <header className="absolute inset-x-0 top-0 z-40">
+        <div className="mx-auto flex h-20 max-w-[1200px] items-center justify-between px-5 sm:px-8">
+          <Brand />
+          <nav className="hidden items-center gap-8 text-[13px] font-medium text-ink/55 md:flex">
+            <a href="#parcours" className="transition-colors hover:text-ink">Le parcours</a>
+            <a href="#prestataires" className="transition-colors hover:text-ink">Prestataires</a>
+            <a href="#backoffice" className="transition-colors hover:text-ink">Espace prestataire</a>
           </nav>
-          <div className="flex items-center gap-2">
-            <Link to="/studio">
-              <Button variant="outline" size="sm">
-                Studio
-              </Button>
-            </Link>
-            <a href="#prestataires">
-              <Button size="sm" icon={<ArrowRight className="h-4 w-4" />}>
-                Voir la démo
-              </Button>
-            </a>
-          </div>
+          <a href="#prestataires" className="inline-flex h-9 items-center justify-center rounded-full bg-ink px-4 text-[13px] font-medium text-white transition-colors hover:bg-ink/85">
+            Voir la démo
+          </a>
         </div>
       </header>
 
-      {/* ----------------------------------------------------------- hero */}
+      {/* Hero centré, cartes flottantes sur les côtés. */}
       <section className="paper-grain relative overflow-hidden">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <div>
-            <Badge tone="accent" className="mb-5">
-              <Sparkles className="h-3 w-3" /> Démo interactive · 5 prestataires fictifs
-            </Badge>
-            <h1 className="font-display text-[44px] leading-[1.03] text-ink sm:text-[62px] lg:text-[70px]">
-              Vos mariages se réservent
-              <span className="block italic text-accent">tout seuls.</span>
+        <div className="relative mx-auto min-h-[860px] max-w-[1440px] px-5 pt-32 sm:min-h-[900px] sm:pt-36">
+          <div className="relative z-10 mx-auto max-w-[680px] text-center fade-up">
+            <p className="eyebrow mb-5">Réservation pour prestataires de mariage</p>
+            <h1 className="display-hero">
+              Le grand jour.<br />Déjà réservé.
             </h1>
-            <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-ink/65 sm:text-[17px]">
-              Cadence donne à chaque prestataire de mariage un lien de réservation
-              personnel : formules, options, tarifs, dates proposées, confirmation et
-              acompte. Vous ne traitez plus les demandes par message.
+            <p className="lede mx-auto mt-7 max-w-[480px]">
+              Votre univers, vos formules, votre calendrier. Une réservation simple,
+              de la première note à l’acompte.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a href="#prestataires">
-                <Button size="lg" full className="sm:w-auto" icon={<ArrowRight className="h-4 w-4" />}>
-                  Ouvrir la démo
-                </Button>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a href="#prestataires" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-[14px] font-medium tracking-[-0.01em] text-white transition-colors hover:bg-ink/85">
+                Découvrir la démo <ArrowRight className="h-4 w-4" />
               </a>
-              <Link to="/studio">
-                <Button variant="outline" size="lg" full className="sm:w-auto">
-                  Créer mon instance
-                </Button>
+              <Link to="/studio" className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-card px-6 text-[14px] font-medium tracking-[-0.01em] text-ink transition-colors hover:bg-ink/[0.03]">
+                Créer mon instance
               </Link>
             </div>
-            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6">
-              <div>
-                <dt className="font-display text-2xl text-ink">5 min</dt>
-                <dd className="mt-1 text-[12px] text-ink/55">pour réserver côté client</dd>
-              </div>
-              <div>
-                <dt className="font-display text-2xl text-ink">30 %</dt>
-                <dd className="mt-1 text-[12px] text-ink/55">d’acompte après confirmation</dd>
-              </div>
-              <div>
-                <dt className="font-display text-2xl text-ink">0 €</dt>
-                <dd className="mt-1 text-[12px] text-ink/55">d’acompte partagé</dd>
-              </div>
-            </dl>
+            <p className="mt-6 text-[12px] text-ink/40">
+              Démo interactive · 5 prestataires fictifs · aucun paiement réel
+            </p>
           </div>
 
-          <PhoneMock />
-        </div>
-        <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
-          <DemoNotice>
-            <strong className="font-semibold text-ink">Démo prête à présenter.</strong> Les cinq prestataires sont fictifs.
-            Les liens fonctionnent dans ce navigateur ; les paiements et e-mails sont simulés.
-          </DemoNotice>
-        </div>
-      </section>
+          {/* Desktop : composition en orbite autour du titre. */}
+          <div className="pointer-events-none absolute inset-0 hidden xl:block" aria-hidden>
+            {providers.slice(0, 5).map((p, i) => (
+              <FloatCard key={p.id} provider={p} index={i} className="pointer-events-auto" />
+            ))}
+          </div>
 
-      {/* ------------------------------------------------------- process */}
-      <section id="processus" className="border-y border-line bg-card">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <SectionTitle
-            eyebrow="Le parcours"
-            title="Quatre étapes, zéro friction"
-            description="Le client va droit au but. Le prestataire valide. L’acompte tombe dans le bon compte."
-          />
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step, i) => (
-              <Card key={step.title} className="relative overflow-hidden">
-                <span className="absolute -right-3 -top-4 font-display text-[72px] leading-none text-ink/5">
-                  {i + 1}
-                </span>
-                <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-brand/8 text-brand">
-                  <step.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mb-2 font-display text-xl leading-snug text-ink">{step.title}</h3>
-                <p className="text-[13.5px] leading-relaxed text-ink/60">{step.text}</p>
-              </Card>
+          {/* Mobile : trois cartes sous le texte, sans chevauchement du titre. */}
+          <div className="relative mx-auto mt-14 flex h-[280px] max-w-[420px] items-start justify-center xl:hidden">
+            {providers.slice(0, 3).map((p, i) => (
+              <MobileFloat key={p.id} provider={p} index={i} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* --------------------------------------------------- prestataires */}
-      <section id="prestataires" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <SectionTitle
-            eyebrow="La démo"
-            title="Un modèle, cinq prestataires"
-            description="Chaque prestataire a sa page publique, son back-office et son propre journal d’acomptes. Aucun panier commun, aucun partage de règlement."
-          />
-          <Link to="/studio">
-            <Button variant="outline" size="sm">
-              Personnaliser une instance
-            </Button>
-          </Link>
-        </div>
-
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {providers.map((p) => (
-            <Card key={p.id} padded={false} className="overflow-hidden">
-              <Link to={`/p/${p.slug}`} className="block">
-                <div className="relative h-40 overflow-hidden">
-                  <img
-                    src={p.coverPhoto}
-                    alt={p.displayName}
-                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/85 to-transparent p-3">
-                    <p className="font-display text-lg leading-tight text-white">{p.displayName}</p>
-                    <p className="text-[11.5px] text-white/70">{p.city}</p>
-                  </div>
-                </div>
-              </Link>
-              <div className="p-4">
-                <p className="mb-2.5 line-clamp-2 text-[13px] leading-relaxed text-ink/60">
-                  {p.tagline}
-                </p>
-                <div className="mb-3 flex items-center justify-between text-[12px]">
-                  <span className="inline-flex items-center gap-1.5 text-ink/60">
-                    <Stars rating={p.stats.rating} /> {p.stats.rating}
-                  </span>
-                  <span className="text-ink/60">
-                    dès <strong className="font-semibold text-ink">
-                      {money(Math.min(...p.formulas.map((f) => f.price)))}
-                    </strong>
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Link to={`/p/${p.slug}`} className="flex-1">
-                    <Button variant="primary" size="sm" full>
-                      Page publique
-                    </Button>
-                  </Link>
-                  <Link to={`/bo/${p.slug}`} className="flex-1">
-                    <Button variant="outline" size="sm" full>
-                      Back-office
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </Card>
-          ))}
-
-          <Link
-            to="/studio"
-            className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-card/50 p-6 text-center transition-colors hover:border-accent/60 hover:bg-accent/5"
-          >
-            <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-accent/12 text-accent">
-              <Sparkles className="h-5 w-5" />
-            </span>
-            <p className="font-display text-xl text-ink">Votre instance</p>
-            <p className="mt-1.5 text-[13px] text-ink/55">
-              Clonez le modèle, changez photos, textes et tarifs.
+      {/* Section sombre : téléphone suspendu, façon keynote. */}
+      <section id="parcours" className="section-dark relative overflow-hidden">
+        <div className="mx-auto max-w-[1200px] px-5 pb-24 pt-0 sm:px-8 sm:pb-32">
+          <div className="relative mx-auto flex justify-center">
+            <div className="lanyard-strap !top-0 !h-[120px] !w-[26px]" style={{ '--strap': '#e88a76' } as React.CSSProperties} />
+            <div className="phone-frame sway mt-16">
+              <div className="phone-island" />
+              <PhoneScreen provider={hero} />
+            </div>
+          </div>
+          <div className="mx-auto mt-14 max-w-[560px] text-center">
+            <h2 className="display-section text-white">Une date.<br />Tout est clair.</h2>
+            <p className="lede mx-auto mt-5 max-w-[440px]">
+              Le client choisit sa formule, propose une date et suit la confirmation.
+              Le prestataire garde la main, sans les allers-retours par message.
             </p>
+            <Link to={hero ? `/p/${hero.slug}/reserver` : '/p/lucas-ferrand/reserver'} className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white px-6 text-[14px] font-medium tracking-[-0.01em] text-black transition-colors hover:bg-white/90">
+              Essayer le parcours <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Carrousel de prestataires sur fond pastel. */}
+      <section id="prestataires" className="pastel-stage overflow-hidden py-20 sm:py-28">
+        <div className="mx-auto max-w-[720px] px-5 text-center">
+          <p className="eyebrow mb-4">La démo</p>
+          <h2 className="display-section">À chaque talent,<br />son propre espace.</h2>
+          <p className="lede mx-auto mt-5 max-w-[520px]">
+            Cinq instances indépendantes. Chacune a sa page, ses formules et son back-office.
+            Faites glisser pour les découvrir.
+          </p>
+        </div>
+        <ProviderCarousel providers={providers} />
+        <div className="mt-2 text-center">
+          <Link to="/studio" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink/70 transition-colors hover:text-ink">
+            Personnaliser une instance <ArrowUpRight className="h-4 w-4" />
           </Link>
         </div>
       </section>
 
-      {/* ----------------------------------------------------- back-office */}
-      <section id="backoffice" className="border-y border-line bg-brand text-white">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:items-center">
-          <div>
-            <div className="max-w-2xl">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Espace prestataire</p>
-              <h2 className="font-display text-[30px] leading-[1.1] text-white sm:text-[38px]">Un back-office simple, à la taille du métier</h2>
-              <p className="mt-3 text-[15px] leading-relaxed text-white/70">Pas de logiciel à apprendre. On confirme une date, on règle une option, on suit les acomptes.</p>
-            </div>
-            <ul className="mt-7 space-y-3.5">
-              {[
-                'Demandes reçues, classées par date',
-                'Confirmation ou refus en un clic',
-                'Réglage des options et du prix sur chaque dossier',
-                'Journal des acomptes encaissés',
-                'Code d’accès propre à chaque prestataire',
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3 text-[14.5px] text-white/80">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/25 text-accent">
-                    <Check className="h-3 w-3" />
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link to="/bo/lucas-ferrand" className="mt-8 inline-block">
-              <Button variant="accent" size="lg">
-                Ouvrir le back-office démo
-              </Button>
-            </Link>
+      {/* Parcours en quatre temps, très aéré. */}
+      <section className="section-light py-20 sm:py-28">
+        <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+          <div className="mx-auto max-w-[640px] text-center">
+            <h2 className="display-section">Quatre étapes.<br />Un seul lien.</h2>
+            <p className="lede mx-auto mt-5 max-w-[460px]">
+              Pensé pour être utilisé sur téléphone, entre deux rendez-vous ou en pleine préparation.
+            </p>
           </div>
-          <BackOfficeMock />
+          <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+            {STEPS.map((step, i) => (
+              <div key={step.title} className="text-center lg:text-left">
+                <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-white soft-shadow lg:mx-0">
+                  <step.icon className="h-5 w-5 text-ink/70" />
+                </div>
+                <p className="text-[12px] font-medium text-ink/35">0{i + 1}</p>
+                <h3 className="mt-1 text-[20px] font-medium tracking-[-0.03em]">{step.title}</h3>
+                <p className="mt-2 text-[14px] leading-relaxed text-ink/55">{step.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ------------------------------------------------------ isolation */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <SectionTitle
-              eyebrow="Cloisonnement"
-              title="Un acompte n’appartient qu’à son prestataire"
-              description="Chaque instance possède son propre espace de stockage, son propre journal et sa propre session. Un règlement encaissé par Lucas Ferrand n’est ni visible, ni déplaçable, ni encaissable depuis le back-office d’un autre prestataire."
-            />
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Badge tone="brand">
-                <Lock className="h-3 w-3" /> Sessions par instance
-              </Badge>
-              <Badge tone="brand">
-                <Wallet className="h-3 w-3" /> Ledger séparés
-              </Badge>
-              <Badge tone="brand">
-                <ShieldCheck className="h-3 w-3" /> Accès croisés refusés
-              </Badge>
-            </div>
+      {/* Back-office sur fond noir, carte blanche flottante. */}
+      <section id="backoffice" className="section-dark py-20 sm:py-28">
+        <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+          <div className="mx-auto max-w-[640px] text-center">
+            <p className="eyebrow mb-4">Espace prestataire</p>
+            <h2 className="display-section text-white">Votre espace.<br />Sans les allers-retours.</h2>
+            <p className="lede mx-auto mt-5 max-w-[480px]">
+              Confirmez une date, ajustez une option, suivez l’acompte.
+              Chaque prestataire ne voit que ses propres dossiers.
+            </p>
           </div>
-          <IsolationDiagram />
-        </div>
-      </section>
-
-      {/* ----------------------------------------------------------- cta */}
-      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-20">
-        <div className="overflow-hidden rounded-3xl bg-accent-soft p-8 sm:p-12">
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="font-display text-[32px] leading-tight text-ink sm:text-[40px]">
-                Prêt pour vos cinq prochains prestataires ?
-              </h2>
-              <p className="mt-3 max-w-xl text-[15px] text-ink/65">
-                Le modèle « Saxophone de mariage » est prêt à être cloné : photos, textes,
-                formules, options et tarifs se remplacent en quelques minutes.
-              </p>
-            </div>
-            <Link to="/studio" className="shrink-0">
-              <Button size="lg" icon={<ArrowRight className="h-4 w-4" />}>
-                Ouvrir le Studio
-              </Button>
+          <div className="mx-auto mt-14 max-w-[760px]">
+            <BackOfficePreview provider={hero} bookings={bookings} />
+          </div>
+          <div className="mt-10 text-center">
+            <Link to={hero ? `/bo/${hero.slug}` : '/bo/lucas-ferrand'} className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white px-6 text-[14px] font-medium tracking-[-0.01em] text-black transition-colors hover:bg-white/90">
+              Ouvrir le back-office démo <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* --------------------------------------------------------- footer */}
-      <footer className="border-t border-line bg-card">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-          <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
-            <div className="max-w-xs">
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-accent">
-                  <Music2 className="h-5 w-5" />
+      {/* Cloisonnement : deux cartes, pas de schéma technique. */}
+      <section className="section-light py-20 sm:py-28">
+        <div className="mx-auto grid max-w-[1200px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-2">
+          <div className="max-w-[480px]">
+            <p className="eyebrow mb-4">Acomptes</p>
+            <h2 className="display-section">Votre acompte.<br />Votre compte.</h2>
+            <p className="lede mt-5">
+              Pas de panier commun, pas de partage entre prestataires.
+              Chaque règlement est rattaché à une seule instance, dans son propre journal.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-2">
+              {['Journal par instance', 'Accès croisés refusés', 'Paiement après confirmation'].map((t) => (
+                <span key={t} className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[12px] font-medium text-ink/60 soft-shadow">
+                  <Check className="h-3 w-3" /> {t}
                 </span>
-                <span className="font-display text-xl text-ink">Cadence</span>
-              </div>
-              <p className="mt-3 text-[13px] leading-relaxed text-ink/55">
-                La réservation en ligne pour les prestataires de mariage. Un lien par
-                prestataire, un back-office par métier.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-10 sm:gap-16">
-              <div>
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-ink/40">
-                  Produit
-                </p>
-                <ul className="space-y-2 text-[13.5px] text-ink/65">
-                  <li>
-                    <a href="#processus" className="hover:text-ink">
-                      Comment ça marche
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#prestataires" className="hover:text-ink">
-                      Prestataires démo
-                    </a>
-                  </li>
-                  <li>
-                    <Link to="/studio" className="hover:text-ink">
-                      Studio de modèles
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-ink/40">
-                  Légal
-                </p>
-                <ul className="space-y-2 text-[13.5px] text-ink/65">
-                  <li>
-                    <Link to="/legal" className="hover:text-ink">
-                      Mentions légales
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/legal#confidentialite" className="hover:text-ink">
-                      Confidentialité
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/legal#paiement" className="hover:text-ink">
-                      Paiement de l’acompte
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+              ))}
             </div>
           </div>
-          <p className="mt-10 border-t border-line pt-6 text-[12px] text-ink/45">
-            Démonstration — aucun paiement réel n’est effectué. Les données de la démo sont
-            stockées uniquement dans votre navigateur.
+          <IsolationPreview bookings={bookings} />
+        </div>
+      </section>
+
+      {/* Studio : halo aurora, carte de création, pas de capture d’e-mail. */}
+      <section className="aurora-stage relative overflow-hidden py-24 sm:py-32">
+        <div className="mx-auto max-w-[1200px] px-5 text-center sm:px-8">
+          <p className="eyebrow mb-4 !text-white/50">Studio de modèles</p>
+          <h2 className="display-section text-white">Votre univers.<br /><span className="text-white/45">Prêt à partager.</span></h2>
+          <p className="lede mx-auto mt-5 max-w-[460px] !text-white/55">
+            Le modèle « Saxophone de mariage » se clone en une instance.
+            Photos, textes, formules et tarifs se personnalisent ensuite.
+          </p>
+          <div className="relative mx-auto mt-14 w-[280px]">
+            <div className="aurora-glow absolute -inset-10 rounded-full" aria-hidden />
+            <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-[#0b0b12]/80 p-6 text-left backdrop-blur-xl">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full border-2 border-white/80 bg-gradient-to-br from-emerald-400/40 to-purple-500/40">
+                <Sparkles className="h-7 w-7 text-white" />
+              </div>
+              <p className="text-center text-[20px] font-medium tracking-[-0.03em] text-white">Votre nom</p>
+              <p className="mt-1 text-center text-[13px] text-white/50">Saxophone de mariage</p>
+              <div className="mt-5 h-px bg-white/15" />
+              <p className="mt-4 text-center text-[12px] text-white/45">3 formules · 6 options · acompte 30 %</p>
+              <Link to="/studio" className="mt-5 flex h-11 items-center justify-center rounded-full border border-white/20 bg-white text-[13px] font-medium text-black transition-colors hover:bg-white/90">
+                Créer mon instance
+              </Link>
+            </div>
+          </div>
+          <p className="mx-auto mt-8 max-w-[380px] text-[12px] leading-relaxed text-white/35">
+            Chaque instance est indépendante. Les données de la démo restent dans votre navigateur.
+          </p>
+        </div>
+      </section>
+
+      <footer className="section-light border-t border-line/60">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-5 py-12 sm:flex-row sm:items-start sm:justify-between sm:px-8">
+          <div className="max-w-xs">
+            <Brand />
+            <p className="mt-4 text-[13px] leading-relaxed text-ink/50">
+              La réservation en ligne pour les prestataires de mariage. Un lien par prestataire.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-x-10 gap-y-3 text-[13px] text-ink/60">
+            <a href="#parcours" className="hover:text-ink">Le parcours</a>
+            <a href="#prestataires" className="hover:text-ink">Prestataires</a>
+            <Link to="/studio" className="hover:text-ink">Studio</Link>
+            <Link to="/legal" className="hover:text-ink">Informations légales</Link>
+          </div>
+        </div>
+        <div className="mx-auto max-w-[1200px] px-5 pb-8 sm:px-8">
+          <p className="border-t border-line/60 pt-6 text-[12px] text-ink/40">
+            Démonstration — aucun paiement réel. Les données sont stockées uniquement dans votre navigateur.
           </p>
         </div>
       </footer>
@@ -400,135 +269,258 @@ export default function Landing() {
   )
 }
 
-/* ------------------------------------------------------------------ mocks */
+/* ------------------------------------------------------------------ cards */
 
-function PhoneMock() {
+const FLOAT_POSITIONS = [
+  'left-[3%] top-[120px] rotate-[-10deg]',
+  'left-[15%] top-[440px] rotate-[7deg]',
+  'right-[4%] top-[100px] rotate-[9deg]',
+  'right-[16%] top-[460px] rotate-[-7deg]',
+  'left-[43%] top-[660px] rotate-[3deg] opacity-90 scale-90',
+]
+
+function FloatCard({ provider, index, className }: { provider: ProviderInstance; index: number; className?: string }) {
   return (
-    <div className="relative mx-auto w-full max-w-[330px]">
-      <div className="absolute -inset-6 -z-10 rounded-[40px] bg-accent/12 blur-2xl" />
-      <div className="overflow-hidden rounded-[32px] border border-line bg-card shadow-[0_30px_70px_-25px_rgba(23,18,14,0.35)]">
-        <div className="relative h-56">
-          <img
-            src="/img/hero-sax.jpg"
-            alt="Aperçu de la page prestataire"
-            className="h-full w-full object-cover object-[62%_center]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/10 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
-              Bordeaux · Gironde
-            </p>
-            <p className="font-display text-[26px] leading-tight text-white">Lucas Ferrand</p>
-            <p className="mt-0.5 text-[12px] text-white/70">Saxophone de cérémonie & de bal</p>
+    <Link
+      to={`/p/${provider.slug}`}
+      className={cn('provider-float fade-up', FLOAT_POSITIONS[index], className)}
+      style={{ animationDelay: `${index * 90}ms` }}
+      aria-label={`Voir la page de ${provider.displayName}`}
+    >
+      <span className="lanyard-strap" style={{ '--strap': strapColor(index) } as React.CSSProperties} />
+      <div className={cn('provider-float-inner', cardGradient(index))}>
+        <img src={provider.coverPhoto} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/10" />
+        <span className="lanyard-slot" />
+        <div className="absolute inset-x-0 bottom-0 bg-white/80 p-3.5 backdrop-blur-xl">
+          <p className="truncate text-[15px] font-medium tracking-[-0.03em] text-ink">{provider.displayName}</p>
+          <p className="mt-0.5 truncate text-[11px] text-ink/50">{provider.city}</p>
+          <div className="mt-2.5 flex items-center justify-between">
+            <span className="text-[11px] font-medium text-ink/70">dès {money(Math.min(...provider.formulas.map((f) => f.price)))}</span>
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-white"><ArrowUpRight className="h-3 w-3" /></span>
           </div>
         </div>
-        <div className="space-y-2.5 p-4">
-          {[
-            { name: 'Cérémonie', price: '590 €' },
-            { name: 'Cérémonie + Cocktail', price: '890 €', hot: true },
-            { name: 'Journée complète', price: '1 490 €' },
-          ].map((f) => (
-            <div
-              key={f.name}
-              className={`flex items-center justify-between rounded-xl border px-3.5 py-2.5 ${
-                f.hot ? 'border-accent/50 bg-accent/6' : 'border-line'
-              }`}
-            >
-              <span className="text-[13px] font-medium text-ink">{f.name}</span>
-              <span className="text-[13px] font-semibold text-ink">{f.price}</span>
-            </div>
-          ))}
-          <div className="flex items-center justify-between rounded-full bg-brand px-4 py-3">
-            <span className="text-[13px] font-semibold text-white">Réserver ma date</span>
-            <ArrowRight className="h-4 w-4 text-accent" />
+      </div>
+    </Link>
+  )
+}
+
+function MobileFloat({ provider, index }: { provider: ProviderInstance; index: number }) {
+  const pos = ['left-0 top-6 rotate-[-8deg] z-10', 'left-1/2 top-0 -translate-x-1/2 z-20', 'right-0 top-8 rotate-[8deg] z-10'][index]
+  return (
+    <Link to={`/p/${provider.slug}`} className={cn('absolute w-[136px]', pos)} aria-label={`Voir ${provider.displayName}`}>
+      <div className={cn('relative overflow-hidden rounded-[18px] float-shadow aspect-[3/4]', cardGradient(index))}>
+        <img src={provider.coverPhoto} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
+        <span className="lanyard-slot !top-2 !w-8 !h-1" />
+        <div className="absolute inset-x-0 bottom-0 bg-white/85 p-2.5 backdrop-blur-xl">
+          <p className="truncate text-[12px] font-medium tracking-[-0.02em]">{provider.displayName}</p>
+          <p className="truncate text-[10px] text-ink/50">{provider.city}</p>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+function PhoneScreen({ provider }: { provider?: ProviderInstance }) {
+  const formula = provider?.formulas.find((f) => f.highlight) ?? provider?.formulas[1]
+  return (
+    <div className="relative h-[580px] bg-[#f7f7f8] px-4 pb-5 pt-12 text-ink">
+      <div className="flex items-center justify-between text-[11px] font-semibold">
+        <span>9:41</span>
+        <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-[2px] bg-ink" /></span>
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <BrandMark className="!h-7 !w-7" />
+        <span className="rounded-full bg-ink px-3 py-1 text-[10px] font-medium text-white">Réservation</span>
+      </div>
+      <div className="relative mt-5 overflow-hidden rounded-[22px] float-shadow">
+        <div className={cn('relative h-[210px]', cardGradient(0))}>
+          <img src={provider?.coverPhoto ?? '/img/hero-sax.jpg'} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
+          <span className="lanyard-slot" />
+          <div className="absolute inset-x-0 bottom-0 bg-white/85 p-3.5 backdrop-blur-xl">
+            <p className="text-[17px] font-medium tracking-[-0.03em]">{provider?.displayName ?? 'Lucas Ferrand'}</p>
+            <p className="text-[11px] text-ink/50">{provider?.city ?? 'Bordeaux'} · Saxophone</p>
           </div>
         </div>
+      </div>
+      <div className="mt-4 rounded-2xl bg-white p-3.5 soft-shadow">
+        <p className="text-[13px] font-medium">{formula?.name ?? 'Cérémonie + Cocktail'}</p>
+        <div className="mt-2 flex items-center justify-between text-[11px] text-ink/50">
+          <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> Date à confirmer</span>
+          <span className="font-medium text-ink">{money(formula?.price ?? 890)}</span>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between rounded-2xl bg-white p-3.5 soft-shadow">
+        <span className="text-[11px] text-ink/50">Acompte après confirmation</span>
+        <span className="text-[13px] font-medium">{money(Math.round((formula?.price ?? 890) * 0.3))}</span>
+      </div>
+      <div className="mt-4 flex h-11 items-center justify-center rounded-full bg-ink text-[13px] font-medium text-white">
+        Réserver une date
       </div>
     </div>
   )
 }
 
-function BackOfficeMock() {
-  const rows = [
-    { name: 'Thomas & Sarah', date: '12 sept.', status: 'Confirmée', tone: 'success' as const },
-    { name: 'Élodie & Rémi', date: '03 oct.', status: 'À valider', tone: 'warning' as const },
-    { name: 'Nina & Léo', date: '21 sept.', status: 'Acompte reçu', tone: 'brand' as const },
-  ]
+function ProviderCarousel({ providers }: { providers: ProviderInstance[] }) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(0)
+  const count = providers.length + 1
+
+  const scrollTo = (index: number) => {
+    const track = trackRef.current
+    if (!track) return
+    const clamped = Math.max(0, Math.min(count - 1, index))
+    const child = track.children[clamped] as HTMLElement | undefined
+    if (!child) return
+    track.scrollTo({ left: child.offsetLeft - track.offsetLeft - (track.clientWidth - child.clientWidth) / 2, behavior: 'smooth' })
+    setActive(clamped)
+  }
+
+  const onScroll = () => {
+    const track = trackRef.current
+    if (!track) return
+    const center = track.scrollLeft + track.clientWidth / 2
+    let best = 0
+    let bestDist = Infinity
+    Array.from(track.children).forEach((child, i) => {
+      const el = child as HTMLElement
+      const c = el.offsetLeft - track.offsetLeft + el.clientWidth / 2
+      const d = Math.abs(c - center)
+      if (d < bestDist) { bestDist = d; best = i }
+    })
+    setActive(best)
+  }
+
   return (
-    <div className="rounded-2xl border border-white/12 bg-white/6 p-4 backdrop-blur-sm sm:p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Store className="h-4 w-4 text-accent" />
-          <span className="text-[13px] font-semibold text-white">Demandes · Lucas Ferrand</span>
-        </div>
-        <Badge tone="accent">Cloisonné</Badge>
+    <div className="mt-6">
+      <div ref={trackRef} className="carousel-track" onScroll={onScroll}>
+        {providers.map((p, i) => (
+          <article key={p.id} className="carousel-card">
+            <div className={cn('relative overflow-hidden rounded-[26px] float-shadow aspect-[3/4.15]', cardGradient(i))}>
+              <Link to={`/p/${p.slug}`} className="absolute inset-0" aria-label={`Page publique de ${p.displayName}`}>
+                <img src={p.coverPhoto} alt={p.displayName} className="absolute inset-0 h-full w-full object-cover opacity-90 transition-transform duration-500 hover:scale-[1.03]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/10" />
+              </Link>
+              <span className="lanyard-slot" />
+              <div className="absolute inset-x-0 bottom-0 bg-white/85 p-5 backdrop-blur-xl">
+                <p className="text-[22px] font-medium tracking-[-0.04em] text-ink">{p.displayName}</p>
+                <p className="mt-0.5 line-clamp-1 text-[12px] text-ink/50">{p.tagline}</p>
+                <div className="mt-4 flex items-center justify-between gap-2">
+                  <span className="text-[12px] text-ink/60">dès <strong className="font-medium text-ink">{money(Math.min(...p.formulas.map((f) => f.price)))}</strong></span>
+                  <div className="flex items-center gap-1.5">
+                    <Link to={`/bo/${p.slug}`} className="rounded-full bg-ink/6 px-3 py-1.5 text-[11px] font-medium text-ink/70 hover:bg-ink/10">Gérer</Link>
+                    <Link to={`/p/${p.slug}/reserver`} className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-[11px] font-medium text-white">
+                      Réserver <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+        <article className="carousel-card">
+          <Link to="/studio" className="flex aspect-[3/4.15] flex-col items-center justify-center rounded-[26px] border border-dashed border-ink/15 bg-white/50 p-6 text-center backdrop-blur-sm transition-colors hover:bg-white/70">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white soft-shadow"><Plus className="h-6 w-6 text-ink/60" /></span>
+            <p className="mt-5 text-[20px] font-medium tracking-[-0.03em]">Votre instance</p>
+            <p className="mt-2 text-[13px] leading-relaxed text-ink/50">Clonez le modèle, changez photos, textes et tarifs.</p>
+          </Link>
+        </article>
       </div>
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="flex items-center justify-center gap-4">
+        <button type="button" onClick={() => scrollTo(active - 1)} disabled={active === 0} aria-label="Précédent" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-ink/70 soft-shadow disabled:opacity-30">
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <div className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-2 soft-shadow">
+          {Array.from({ length: count }).map((_, i) => (
+            <button key={i} type="button" onClick={() => scrollTo(i)} aria-label={`Aller à la carte ${i + 1}`} className={cn('h-1.5 rounded-full transition-all', i === active ? 'w-5 bg-ink' : 'w-1.5 bg-ink/25')} />
+          ))}
+        </div>
+        <button type="button" onClick={() => scrollTo(active + 1)} disabled={active === count - 1} aria-label="Suivant" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-ink/70 soft-shadow disabled:opacity-30">
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function BackOfficePreview({ provider, bookings }: { provider?: ProviderInstance; bookings: Booking[] }) {
+  const pending = bookings.filter((b) => b.status === 'proposee').length
+  const confirmed = bookings.filter((b) => b.status === 'confirmee' || b.status === 'acompte_paye').length
+  const collected = bookings.filter((b) => b.deposit.status === 'paye').reduce((s, b) => s + b.deposit.amount, 0)
+  return (
+    <div className="overflow-hidden rounded-[28px] bg-white text-ink float-shadow">
+      <div className="flex items-center justify-between border-b border-line/60 px-5 py-4">
+        <div className="flex items-center gap-2.5">
+          <BrandMark className="!h-7 !w-7" />
+          <div>
+            <p className="text-[13px] font-medium">{provider?.displayName ?? 'Lucas Ferrand'}</p>
+            <p className="text-[11px] text-ink/45">Espace prestataire · aperçu</p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-1 rounded-full bg-ink/5 px-2.5 py-1 text-[11px] font-medium text-ink/60"><Lock className="h-3 w-3" /> Cloisonné</span>
+      </div>
+      <div className="grid grid-cols-3 gap-3 p-5">
         {[
-          { k: 'En attente', v: '3' },
-          { k: 'Confirmées', v: '8' },
-          { k: 'Acomptes', v: '2 340 €' },
+          { k: 'En attente', v: String(pending) },
+          { k: 'Confirmées', v: String(confirmed) },
+          { k: 'Acomptes', v: money(collected) },
         ].map((s) => (
-          <div key={s.k} className="rounded-xl bg-white/8 px-3 py-2.5">
-            <p className="font-display text-lg leading-none text-white">{s.v}</p>
-            <p className="mt-1 text-[10.5px] uppercase tracking-wider text-white/55">{s.k}</p>
+          <div key={s.k} className="rounded-2xl bg-ink/[0.035] p-3.5">
+            <p className="text-[20px] font-medium tracking-[-0.04em]">{s.v}</p>
+            <p className="mt-1 text-[11px] text-ink/45">{s.k}</p>
           </div>
         ))}
       </div>
-      <div className="mt-3 space-y-2">
-        {rows.map((r) => (
-          <div
-            key={r.name}
-            className="flex items-center justify-between rounded-xl bg-white/6 px-3.5 py-2.5"
-          >
+      <div className="space-y-2 px-5 pb-5">
+        {bookings.slice(0, 3).map((b) => (
+          <div key={b.code} className="flex items-center justify-between rounded-2xl border border-line/60 px-4 py-3">
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-medium text-white">{r.name}</p>
-              <p className="text-[11.5px] text-white/55">{r.date}</p>
+              <p className="truncate text-[13px] font-medium">{b.client.couple}</p>
+              <p className="text-[11px] text-ink/45">{formatDateShort(b.date)} · {b.formulaName}</p>
             </div>
-            <Badge tone={r.tone}>{r.status}</Badge>
+            <span className={cn('shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium', b.deposit.status === 'paye' ? 'bg-emerald-50 text-emerald-700' : b.status === 'confirmee' ? 'bg-ink/6 text-ink/70' : 'bg-amber-50 text-amber-700')}>
+              {b.deposit.status === 'paye' ? 'Acompte reçu' : b.status === 'confirmee' ? 'Confirmée' : 'À valider'}
+            </span>
           </div>
         ))}
       </div>
-      <p className="mt-4 flex items-center gap-1.5 text-[11px] text-white/45">
-        <ExternalLink className="h-3 w-3" /> Code d’accès propre à cette instance
-      </p>
     </div>
   )
 }
 
-function IsolationDiagram() {
+function IsolationPreview({ bookings }: { bookings: Booking[] }) {
+  const rows = bookings.slice(0, 3)
   return (
-    <div className="relative">
-      <div className="absolute left-1/2 top-16 hidden h-10 w-px -translate-x-1/2 bg-line sm:block" />
-      <Card className="mx-auto max-w-md p-5 text-center">
-        <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand/8 text-brand">
-          <Wallet className="h-5 w-5" />
-        </span>
-        <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-ink/40">
-          Journal des acomptes
-        </p>
-        <p className="mt-1.5 font-display text-lg text-ink">Instance · Lucas Ferrand</p>
-        <div className="mt-4 space-y-2 text-left">
-          {[
-            ['Nina & Léo', '267 €', '12:04'],
-            ['Thomas & Sarah', '657 €', '09:41'],
-            ['Élodie & Rémi', 'en attente', '—'],
-          ].map(([n, v, t]) => (
-            <div
-              key={n}
-              className="flex items-center justify-between rounded-xl border border-line px-3.5 py-2.5"
-            >
-              <span className="text-[13px] text-ink/75">{n}</span>
-              <span className="text-[13px] font-semibold text-ink">{v}</span>
-              <span className="w-12 text-right text-[11px] text-ink/35">{t}</span>
+    <div className="relative mx-auto w-full max-w-[420px]">
+      <div className="absolute -left-6 top-8 hidden w-[85%] rotate-[-6deg] rounded-[24px] bg-white p-5 opacity-60 soft-shadow sm:block" aria-hidden>
+        <p className="text-[12px] font-medium text-ink/40">Autre instance</p>
+        <div className="mt-3 h-2 w-2/3 rounded-full bg-ink/8" />
+        <div className="mt-2 h-2 w-1/2 rounded-full bg-ink/8" />
+      </div>
+      <div className="relative rounded-[28px] bg-white p-6 float-shadow">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-white"><ShieldCheck className="h-4 w-4" /></span>
+            <p className="text-[14px] font-medium">Journal des acomptes</p>
+          </div>
+          <span className="rounded-full bg-ink/5 px-2.5 py-1 text-[11px] text-ink/50">Cette instance</span>
+        </div>
+        <div className="mt-5 space-y-2.5">
+          {rows.length === 0 && <p className="text-[13px] text-ink/45">Chargement de l’aperçu…</p>}
+          {rows.map((b) => (
+            <div key={b.code} className="flex items-center justify-between rounded-2xl bg-ink/[0.03] px-4 py-3">
+              <div>
+                <p className="text-[13px] font-medium">{b.client.couple}</p>
+                <p className="text-[11px] text-ink/45">{b.deposit.status === 'paye' ? 'Reçu' : 'En attente'}</p>
+              </div>
+              <p className="text-[14px] font-medium tracking-[-0.02em]">{b.deposit.status === 'paye' ? money(b.deposit.amount) : '—'}</p>
             </div>
           ))}
         </div>
-        <p className="mt-4 text-[11.5px] leading-relaxed text-ink/45">
+        <p className="mt-5 text-[12px] leading-relaxed text-ink/45">
           Dans le back-office d’un prestataire, seules ses propres lignes apparaissent.
-          Chaque instance possède sa clé de stockage ; le Studio de démo offre une vue d’ensemble séparée.
         </p>
-      </Card>
+      </div>
     </div>
   )
 }

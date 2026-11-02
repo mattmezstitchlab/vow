@@ -2,7 +2,7 @@
 
 Application web **mobile-first** de démonstration : un lien public par prestataire, des formules,
 des options, une date proposée, une confirmation prestataire et un acompte **simulé**.
-Le design existant est conservé : fond crème, vert profond, accent doré, typographie éditoriale.
+Le design s’inspire d’un langage visuel produit contemporain : typographie sans sérif ample, palette noir/blanc/gris, boutons pilule, cartes flottantes et halos pastel. Les informations et parcours Cadence restent propres à l’application.
 
 > Démo prête à présenter à cinq prestataires. Aucun paiement réel, aucun e-mail envoyé,
 > aucune donnée bancaire collectée. Les données restent dans le navigateur.

@@ -1,6 +1,6 @@
 # Vow — Cadence
 
-Démo mobile-first de réservation pour prestataires de mariage.
+Démo mobile-first de réservation pour prestataires de mariage, avec interface noir/blanc/gris, typographie sans sérif et cartes flottantes à halos pastel.
 
 L’application se trouve dans [`agon-agent_1-f2c1c3b7`](./agon-agent_1-f2c1c3b7).
 

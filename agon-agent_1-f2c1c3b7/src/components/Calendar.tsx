@@ -81,7 +81,7 @@ export function Calendar({
   }, [cursor, limit])
 
   return (
-    <div className="rounded-2xl border border-line bg-card p-3">
+    <div className="rounded-3xl border border-line/70 bg-card p-4 soft-shadow">
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
@@ -92,7 +92,7 @@ export function Calendar({
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <p className="font-display text-lg text-ink">
+        <p className="text-[15px] font-medium tracking-[-0.02em] text-ink">
           {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
         </p>
         <button
@@ -108,7 +108,7 @@ export function Calendar({
 
       <div className="mb-1 grid grid-cols-7 gap-1">
         {WEEKDAYS.map((d, i) => (
-          <div key={i} className="py-1 text-center text-[11px] font-bold text-ink/35">
+          <div key={i} className="py-1 text-center text-[11px] font-medium text-ink/35">
             {d}
           </div>
         ))}
@@ -129,7 +129,7 @@ export function Calendar({
               aria-pressed={isSelected}
               onClick={() => onChange(cell.iso)}
               className={cn(
-                'relative flex aspect-square items-center justify-center rounded-xl text-[13px] font-medium transition-all',
+                'relative flex aspect-square items-center justify-center rounded-full text-[13px] font-medium transition-all',
                 !cell.inMonth && 'text-ink/25',
                 cell.inMonth && !disabled && 'text-ink hover:bg-brand/10',
                 isPast && 'text-ink/20 line-through decoration-ink/20',
@@ -139,7 +139,7 @@ export function Calendar({
             >
               {cell.day}
               {isBlocked && !isPast && (
-                <span className="absolute bottom-1 h-1 w-1 rounded-full bg-accent/70" />
+                <span className="absolute bottom-1 h-1 w-1 rounded-full bg-ink/30" />
               )}
             </button>
           )
@@ -148,7 +148,7 @@ export function Calendar({
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line pt-3 text-[11px] text-ink/50">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-accent/70" /> Indisponible
+          <span className="h-2 w-2 rounded-full bg-ink/30" /> Indisponible
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-brand" /> Sélectionné

@@ -13,12 +13,12 @@ import {
   Info,
   Lock,
   MapPin,
-  Music2,
   ShieldCheck,
   XCircle,
 } from 'lucide-react'
 import { Badge, Button, Card, Sheet, useToast } from '../components/ui'
 import { DemoNotice } from '../components/DemoNotice'
+import { Brand } from '../components/Brand'
 import {
   acceptAlternativeDate,
   cancelBooking,
@@ -29,6 +29,7 @@ import {
 } from '../lib/store'
 import type { Booking, ProviderInstance } from '../lib/types'
 import { SLOT_LABEL, STATUS_LABEL, formatDateLong, formatStamp, money, optionUnitLabel } from '../lib/format'
+import { providerTheme } from '../lib/theme'
 import { cn } from '../lib/utils'
 
 type Tone = 'neutral' | 'accent' | 'brand' | 'success' | 'warning' | 'danger'
@@ -185,7 +186,7 @@ export default function Reservation() {
           <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-600/10 text-red-600">
             <XCircle className="h-6 w-6" />
           </span>
-          <h1 className="font-display text-[26px] text-ink">Réservation introuvable</h1>
+          <h1 className="display-page text-ink">Réservation introuvable</h1>
           <p className="mt-2 text-[14px] leading-relaxed text-ink/60">
             Ce code n’existe pas pour ce prestataire. Dans la démo, les réservations sont cloisonnées
             par instance et enregistrées dans le navigateur qui les a créées.
@@ -206,19 +207,16 @@ export default function Reservation() {
     <div
       className="min-h-screen bg-paper"
       style={
-        {
-          '--color-brand': provider.palette.brand,
-          '--color-accent': provider.palette.accent,
-          '--color-paper': provider.palette.paper,
-        } as React.CSSProperties
+        providerTheme(provider)
       }
     >
-      <header className="border-b border-line/70 bg-paper/90 backdrop-blur-md">
+      <header className="border-b border-line/60 bg-paper/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
-          <Link to={`/p/${provider.slug}`} className="flex min-w-0 items-center gap-2 text-ink/70 hover:text-ink">
-            <Music2 className="h-4 w-4 shrink-0" />
-            <span className="truncate text-[13px] font-semibold">{provider.displayName}</span>
-          </Link>
+          <div className="flex min-w-0 items-center gap-3">
+            <Brand to={`/p/${provider.slug}`} />
+            <span className="hidden h-5 w-px bg-line sm:block" />
+            <span className="hidden max-w-[180px] truncate text-[12px] text-ink/45 sm:block">{provider.displayName}</span>
+          </div>
           <Badge tone="outline" className="shrink-0">Réservation {booking.code}</Badge>
         </div>
       </header>
@@ -231,7 +229,7 @@ export default function Reservation() {
               className={cn(
                 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
                 booking.status === 'acompte_paye' ? 'bg-emerald-600/12 text-emerald-700'
-                  : booking.status === 'confirmee' || booking.status === 'date_a_accepter' ? 'bg-accent/15 text-accent'
+                  : booking.status === 'confirmee' || booking.status === 'date_a_accepter' ? 'bg-ink/6 text-ink/65'
                     : booking.status === 'refusee' || booking.status === 'annulee' ? 'bg-red-600/10 text-red-600'
                       : 'bg-amber-500/15 text-amber-700',
               )}
@@ -243,7 +241,7 @@ export default function Reservation() {
             </span>
             <div className="min-w-0">
               <Badge tone={STATUS_TONE[booking.status]}>{STATUS_LABEL[booking.status]}</Badge>
-              <h1 className="mt-2 font-display text-[28px] leading-tight text-ink">
+              <h1 className="mt-2 text-[27px] font-medium tracking-[-0.045em] leading-tight text-ink">
                 {booking.status === 'proposee' && 'Votre date a été proposée'}
                 {booking.status === 'date_a_accepter' && 'Une autre date vous est proposée'}
                 {booking.status === 'confirmee' && 'Date confirmée — à vous de jouer'}
@@ -275,7 +273,7 @@ export default function Reservation() {
             </div>
           )}
           {booking.status === 'proposee' && (
-            <div className="mt-5 flex items-start gap-2 rounded-xl bg-ink/4 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink/60">
+            <div className="mt-5 flex items-start gap-2 rounded-2xl bg-ink/4 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink/60">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Aucun paiement n’est demandé tant que la date n’est pas confirmée. Vous pouvez annuler à tout moment avant règlement.
             </div>
@@ -299,10 +297,10 @@ export default function Reservation() {
         <Card className="mt-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="font-display text-[22px] leading-tight text-ink">{booking.formulaName}</p>
+              <p className="text-[21px] font-medium tracking-[-0.04em] leading-tight text-ink">{booking.formulaName}</p>
               <p className="text-[13px] text-ink/55">{booking.client.couple} · {booking.client.eventType}</p>
             </div>
-            <p className="font-display text-[22px] text-ink">{money(booking.pricing.total)}</p>
+            <p className="text-[21px] font-medium tracking-[-0.04em] text-ink">{money(booking.pricing.total)}</p>
           </div>
           <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-2">
             <div className="flex items-start gap-2 text-[13.5px] text-ink/70">
@@ -329,7 +327,7 @@ export default function Reservation() {
             <div className="flex items-center justify-between text-[13.5px] text-ink/60"><span>Options</span><span>{money(booking.pricing.total - booking.pricing.subtotal)}</span></div>
             <div className="flex items-baseline justify-between border-t border-line pt-2.5">
               <span className="font-semibold text-ink">Total TTC</span>
-              <span className="font-display text-[26px] leading-none text-ink">{money(booking.pricing.total)}</span>
+              <span className="text-[26px] font-medium tracking-[-0.045em] leading-none text-ink">{money(booking.pricing.total)}</span>
             </div>
           </div>
         </Card>
@@ -337,8 +335,8 @@ export default function Reservation() {
         <Card className="mt-4" variant={deposit.status === 'paye' ? 'success' : 'accent'}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink/40">Acompte · {booking.pricing.depositPercent} %</p>
-              <p className="mt-1 font-display text-[28px] leading-none text-ink">{money(deposit.amount)}</p>
+              <p className="text-[11px] font-bold font-medium text-ink/40">Acompte · {booking.pricing.depositPercent} %</p>
+              <p className="mt-1 text-[28px] font-medium tracking-[-0.045em] leading-none text-ink">{money(deposit.amount)}</p>
               {deposit.status === 'paye' ? (
                 <p className="mt-2 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-emerald-700">
                   <Check className="h-3.5 w-3.5" /> Reçu le {deposit.paidAt ? formatStamp(deposit.paidAt) : '—'}{deposit.method ? ` · ${deposit.method}` : ''}
@@ -363,7 +361,7 @@ export default function Reservation() {
         </Card>
 
         <Card className="mt-4">
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-ink/40">Suivi</p>
+          <p className="mb-3 text-[11px] font-bold font-medium text-ink/40">Suivi</p>
           <ol className="space-y-3">
             {booking.timeline.map((t, i) => (
               <li key={i} className="flex gap-3">
@@ -395,12 +393,12 @@ export default function Reservation() {
       <Sheet
         open={payOpen}
         onClose={() => { if (payStep !== 'processing') { setPayOpen(false); setPayStep('form'); setPayError(null) } }}
-        title={<div><p className="font-display text-[22px] leading-tight text-ink">Paiement de l’acompte</p><p className="text-[12.5px] text-ink/55">{money(deposit.amount)} · {provider.displayName}</p></div>}
+        title={<div><p className="text-[21px] font-medium tracking-[-0.04em] leading-tight text-ink">Paiement de l’acompte</p><p className="text-[12.5px] text-ink/55">{money(deposit.amount)} · {provider.displayName}</p></div>}
       >
         {payStep === 'form' && (
           <div className="space-y-4">
             <DemoNotice>Mode démonstration : aucun débit réel. Aucune donnée de carte n’est demandée ni conservée.</DemoNotice>
-            <div className="rounded-xl border border-line p-4">
+            <div className="rounded-2xl border border-line p-4">
               <div className="flex items-center justify-between text-[13.5px] text-ink/60"><span>Total prestation</span><span>{money(booking.pricing.total)}</span></div>
               <div className="mt-2 flex items-center justify-between text-[14px] font-semibold text-ink"><span>Acompte ({booking.pricing.depositPercent} %)</span><span>{money(deposit.amount)}</span></div>
               <div className="mt-2 flex items-center justify-between border-t border-line pt-2 text-[12.5px] text-ink/55"><span>Solde restant</span><span>{money(balance)}</span></div>
@@ -413,7 +411,7 @@ export default function Reservation() {
                     key={m}
                     type="button"
                     onClick={() => setPayMethod(m)}
-                    className={cn('flex items-center justify-between rounded-xl border px-3.5 py-3 text-left text-[13.5px] font-medium transition-colors', payMethod === m ? 'border-brand bg-brand/5 text-ink' : 'border-line text-ink/60 hover:border-ink/25')}
+                    className={cn('flex items-center justify-between rounded-2xl border px-3.5 py-3 text-left text-[13.5px] font-medium transition-colors', payMethod === m ? 'border-brand bg-brand/5 text-ink' : 'border-line text-ink/60 hover:border-ink/25')}
                   >
                     {m}
                     <span className={cn('flex h-5 w-5 items-center justify-center rounded-full border', payMethod === m ? 'border-brand bg-brand text-white' : 'border-line')}>{payMethod === m && <Check className="h-3 w-3" />}</span>
@@ -432,14 +430,14 @@ export default function Reservation() {
         {payStep === 'processing' && (
           <div className="flex flex-col items-center py-10 text-center">
             <div className="h-9 w-9 animate-spin rounded-full border-2 border-ink/15 border-t-accent" />
-            <p className="mt-4 font-display text-xl text-ink">Simulation en cours…</p>
+            <p className="mt-4 text-xl font-medium tracking-[-0.035em] text-ink">Simulation en cours…</p>
             <p className="mt-1 text-[13px] text-ink/55">Enregistrement de l’acompte dans l’instance</p>
           </div>
         )}
         {payStep === 'done' && (
           <div className="flex flex-col items-center py-6 text-center">
             <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600/12 text-emerald-700"><CheckCircle2 className="h-7 w-7" /></span>
-            <p className="font-display text-[26px] leading-tight text-ink">Acompte simulé enregistré</p>
+            <p className="text-[26px] font-medium tracking-[-0.045em] leading-tight text-ink">Acompte simulé enregistré</p>
             <p className="mt-2 max-w-xs text-[13.5px] leading-relaxed text-ink/60">
               {money(deposit.amount)} ont été enregistrés au nom de {provider.displayName}. Référence {booking.deposit.reference}. Aucun débit réel n’a eu lieu.
             </p>
@@ -451,7 +449,7 @@ export default function Reservation() {
       <Sheet
         open={cancelOpen}
         onClose={() => { if (!busy) setCancelOpen(false) }}
-        title={<p className="font-display text-[22px] text-ink">Annuler la demande ?</p>}
+        title={<p className="text-[21px] font-medium tracking-[-0.04em] text-ink">Annuler la demande ?</p>}
         footer={
           <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" onClick={() => setCancelOpen(false)} disabled={busy}>Conserver</Button>

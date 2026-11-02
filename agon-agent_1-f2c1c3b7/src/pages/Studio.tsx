@@ -10,7 +10,6 @@ import {
   Link2,
   Loader2,
   Lock,
-  Music2,
   Palette,
   Plus,
   RotateCcw,
@@ -22,6 +21,7 @@ import {
 } from 'lucide-react'
 import { Badge, Button, Card, Field, Input, Select, Sheet, Textarea, useToast } from '../components/ui'
 import { DemoNotice } from '../components/DemoNotice'
+import { Brand } from '../components/Brand'
 import { IMAGE_LIBRARY } from '../lib/images'
 import { TEMPLATES } from '../lib/templates'
 import {
@@ -187,17 +187,12 @@ export default function Studio() {
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/92 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-line/60 bg-paper/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-accent">
-              <Music2 className="h-5 w-5" />
-            </span>
-            <span className="font-display text-xl leading-none text-ink">Cadence</span>
-            <Badge tone="outline" className="ml-1 hidden sm:inline-flex">
-              Studio
-            </Badge>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Brand />
+            <Badge tone="outline" className="hidden sm:inline-flex">Studio</Badge>
+          </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => setResetOpen(true)} icon={<RotateCcw className="h-3.5 w-3.5" />}>
               <span className="hidden sm:inline">Réinitialiser</span>
@@ -225,15 +220,15 @@ export default function Studio() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
         <div className="max-w-2xl">
-          <Badge tone="accent" className="mb-3">
+          <Badge tone="outline" className="mb-4">
             <Sparkles className="h-3 w-3" /> Studio de modèles
           </Badge>
-          <h1 className="font-display text-[38px] leading-[1.05] text-ink sm:text-[48px]">
+          <h1 className="display-section text-ink">
             Un modèle, des milliers d’instances
           </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-ink/60">
+          <p className="lede mt-5 max-w-xl">
             Le modèle « Saxophone de mariage » contient la structure complète : textes,
             formules, options, photos et palette. Clonez-le, remplacez les photos, réécrivez les
             textes, changez les tarifs. Chaque clone devient une instance indépendante, avec son
@@ -247,22 +242,22 @@ export default function Studio() {
         </DemoNotice>
 
         {/* ------------------------------------------------- modèles */}
-        <section className="mt-10">
-          <h2 className="mb-4 font-display text-[26px] text-ink">Modèles disponibles</h2>
+        <section className="mt-14">
+          <h2 className="display-page mb-5 text-ink">Modèles disponibles</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {TEMPLATES.map((t) => (
               <Card key={t.id} padded={false} className="flex flex-col overflow-hidden">
                 <div className="relative h-32">
                   <img src={t.coverPhoto} alt={t.name} className="h-full w-full object-cover" />
                   <span
-                    className="absolute bottom-2 left-2 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
+                    className="absolute bottom-2 left-2 rounded-full px-2.5 py-1 text-[10px] font-medium text-white"
                     style={{ background: t.accentPreview }}
                   >
                     {t.category}
                   </span>
                 </div>
                 <div className="flex flex-1 flex-col p-4">
-                  <h3 className="font-display text-[20px] leading-tight text-ink">{t.name}</h3>
+                  <h3 className="text-[20px] font-medium tracking-[-0.035em] leading-tight text-ink">{t.name}</h3>
                   <p className="mt-1.5 flex-1 text-[12.5px] leading-relaxed text-ink/55">
                     {t.description}
                   </p>
@@ -289,7 +284,7 @@ export default function Studio() {
         <section className="mt-12">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="font-display text-[26px] text-ink">Instances actives</h2>
+              <h2 className="display-page text-ink">Instances actives</h2>
               <p className="text-[13px] text-ink/55">
                 {providers.length} instance{providers.length > 1 ? 's' : ''} en ligne.
               </p>
@@ -305,11 +300,11 @@ export default function Studio() {
                     <img
                       src={p.coverPhoto}
                       alt={p.displayName}
-                      className="h-16 w-full rounded-xl object-cover sm:h-16 sm:w-24"
+                      className="h-28 w-full rounded-2xl object-cover sm:h-20 sm:w-32"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-display text-[20px] leading-tight text-ink">
+                        <h3 className="text-[20px] font-medium tracking-[-0.035em] leading-tight text-ink">
                           {p.displayName}
                         </h3>
                         <Badge tone="outline">{p.templateId}</Badge>
@@ -373,19 +368,19 @@ export default function Studio() {
               <table className="w-full min-w-[620px] text-left">
                 <thead>
                   <tr className="border-b border-line bg-ink/2">
-                    <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.13em] text-ink/40">
+                    <th className="px-5 py-2.5 text-[11px] font-medium text-ink/40">
                       Instance
                     </th>
-                    <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.13em] text-ink/40">
+                    <th className="px-5 py-2.5 text-[11px] font-medium text-ink/40">
                       Clé de stockage
                     </th>
-                    <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.13em] text-ink/40">
+                    <th className="px-5 py-2.5 text-[11px] font-medium text-ink/40">
                       Réservations
                     </th>
-                    <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.13em] text-ink/40">
+                    <th className="px-5 py-2.5 text-[11px] font-medium text-ink/40">
                       Acomptes encaissés
                     </th>
-                    <th className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.13em] text-ink/40">
+                    <th className="px-5 py-2.5 text-[11px] font-medium text-ink/40">
                       CA confirmé
                     </th>
                   </tr>
@@ -535,7 +530,7 @@ function CloneSheet({
     >
       <div className="space-y-4">
         {template && (
-          <div className="overflow-hidden rounded-xl border border-line">
+          <div className="overflow-hidden rounded-2xl border border-line">
             <img src={template.coverPhoto} alt="" className="h-32 w-full object-cover" />
             <div className="p-3">
               <p className="text-[13px] font-semibold text-ink">{template.name}</p>
@@ -563,7 +558,7 @@ function CloneSheet({
             />
           </div>
         </Field>
-        <p className="rounded-xl bg-accent/8 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink/60">
+        <p className="rounded-2xl bg-accent/8 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink/60">
           L’instance sera créée avec un code d’accès propre et un journal d’acomptes vide. Vous
           pourrez ensuite remplacer photos, textes et tarifs.
         </p>
@@ -793,7 +788,7 @@ function InstanceEditor({
               <img
                 src={draft.coverPhoto}
                 alt=""
-                className="h-44 w-full rounded-xl border border-line object-cover"
+                className="h-44 w-full rounded-2xl border border-line object-cover"
               />
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button
@@ -816,7 +811,7 @@ function InstanceEditor({
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {draft.gallery.map((g) => (
-                  <div key={g.id} className="overflow-hidden rounded-xl border border-line">
+                  <div key={g.id} className="overflow-hidden rounded-2xl border border-line">
                     <img src={g.src} alt={g.caption} className="h-24 w-full object-cover" />
                     <div className="p-2">
                       <Input
@@ -885,9 +880,9 @@ function InstanceEditor({
         {tab === 'formules' && (
           <div className="space-y-3">
             {draft.formulas.map((f, idx) => (
-              <div key={f.id} className="rounded-xl border border-line p-3">
+              <div key={f.id} className="rounded-2xl border border-line p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-ink/40">
+                  <p className="text-[11px] font-medium text-ink/40">
                     Formule {idx + 1}
                   </p>
                   <button
@@ -999,7 +994,7 @@ function InstanceEditor({
         {tab === 'options' && (
           <div className="space-y-3">
             {draft.options.map((o) => (
-              <div key={o.id} className="rounded-xl border border-line p-3">
+              <div key={o.id} className="rounded-2xl border border-line p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="truncate text-[13px] font-semibold text-ink">{o.name}</p>
                   <button
@@ -1093,6 +1088,9 @@ function InstanceEditor({
 
         {tab === 'apparence' && (
           <div className="space-y-4">
+            <p className="text-[13px] leading-relaxed text-ink/55">
+              L’interface reste dans le thème Cadence noir et blanc ; ces teintes personnalisent uniquement les détails décoratifs de l’instance.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {(['brand', 'accent', 'paper'] as const).map((key) => (
                 <Field key={key} label={key === 'brand' ? 'Couleur principale' : key === 'accent' ? 'Accent' : 'Fond'}>
@@ -1103,7 +1101,7 @@ function InstanceEditor({
                       onChange={(e) =>
                         set('palette', { ...draft.palette, [key]: e.target.value })
                       }
-                      className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-line bg-card p-1"
+                      className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-line/70 bg-card p-1"
                     />
                     <Input
                       value={draft.palette[key]}
@@ -1150,27 +1148,37 @@ function InstanceEditor({
               />
             </Field>
 
-            <div className="overflow-hidden rounded-xl border border-line">
+            <div className="overflow-hidden rounded-2xl border border-line">
               <p className="bg-ink/3 px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.13em] text-ink/45">
                 Aperçu
               </p>
-              <div
-                className="p-4"
-                style={{ background: draft.palette.paper, color: draft.palette.brand }}
-              >
-                <p
-                  className="font-display text-[24px]"
-                  style={{ fontFamily: 'var(--font-display)' }}
-                >
-                  {draft.displayName}
-                </p>
-                <p className="mt-1 text-[12.5px] opacity-70">{draft.tagline}</p>
-                <span
-                  className="mt-3 inline-block rounded-full px-3 py-1.5 text-[12px] font-semibold text-white"
-                  style={{ background: draft.palette.accent }}
-                >
-                  Réserver une date
-                </span>
+              <div className="pastel-stage p-5 text-ink">
+                <div className="rounded-2xl bg-white/85 p-4 backdrop-blur-xl">
+                  <p
+                    className="text-[24px] font-medium tracking-[-0.04em]"
+                    style={{ color: draft.palette.brand }}
+                  >
+                    {draft.displayName}
+                  </p>
+                  <p className="mt-1 text-[12.5px] opacity-70">{draft.tagline}</p>
+                  <span
+                    className="mt-3 inline-flex rounded-full px-4 py-2 text-[12px] font-medium text-white"
+                    style={{ background: draft.palette.accent }}
+                  >
+                    Réserver une date
+                  </span>
+                  <div className="mt-4 flex items-center gap-2.5" aria-label="Aperçu de la palette personnalisée">
+                    {(['brand', 'accent', 'paper'] as const).map((key) => (
+                      <span
+                        key={key}
+                        title={key === 'brand' ? 'Principale' : key === 'accent' ? 'Accent' : 'Fond'}
+                        className="h-5 w-5 rounded-full ring-1 ring-black/10"
+                        style={{ background: draft.palette[key] }}
+                      />
+                    ))}
+                    <span className="ml-1 text-[11px] text-ink/45">Teintes décoratives</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1184,7 +1192,7 @@ function InstanceEditor({
         title={<p className="font-display text-[22px] text-ink">Ajouter une photo</p>}
       >
         <div className="space-y-4">
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-line bg-ink/2 px-4 py-8 text-center transition-colors hover:border-accent/60">
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-ink/2 px-4 py-8 text-center transition-colors hover:border-accent/60">
             <ImageIcon className="mb-2 h-7 w-7 text-ink/30" />
             <span className="text-[13.5px] font-semibold text-ink">Téléverser depuis mon appareil</span>
             <span className="mt-1 text-[11.5px] text-ink/45">JPEG ou PNG · redimensionné automatiquement</span>

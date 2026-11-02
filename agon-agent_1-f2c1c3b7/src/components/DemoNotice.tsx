@@ -13,11 +13,11 @@ export function DemoNotice({
   return (
     <div
       className={cn(
-        'flex items-start gap-2 rounded-xl border border-accent/25 bg-accent/8 px-3.5 py-2.5 text-[12px] leading-relaxed text-ink/65',
+        'flex items-start gap-2 rounded-2xl bg-ink/[0.035] px-3.5 py-2.5 text-[12px] leading-relaxed text-ink/55',
         className,
       )}
     >
-      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
+      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink/40" aria-hidden />
       <p>
         {children ?? (
           <>

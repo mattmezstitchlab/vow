@@ -23,18 +23,18 @@ type ButtonVariant = 'primary' | 'accent' | 'secondary' | 'outline' | 'ghost' | 
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-brand text-white hover:bg-brand/90 shadow-sm shadow-brand/20',
-  accent: 'bg-accent text-white hover:bg-accent/90 shadow-sm shadow-accent/25',
-  secondary: 'bg-brand/8 text-brand hover:bg-brand/14',
-  outline: 'border border-line bg-card text-ink hover:border-ink/30',
+  primary: 'bg-brand text-white hover:bg-brand/85 active:scale-[0.98]',
+  accent: 'bg-brand text-white hover:bg-brand/85 active:scale-[0.98]',
+  secondary: 'bg-ink/6 text-ink hover:bg-ink/10',
+  outline: 'border border-line bg-card text-ink hover:bg-ink/[0.03] hover:border-ink/20',
   ghost: 'text-ink/70 hover:bg-ink/6 hover:text-ink',
   danger: 'bg-red-600 text-white hover:bg-red-700',
 }
 
 const SIZES: Record<ButtonSize, string> = {
-  sm: 'h-9 px-3.5 text-[13px]',
-  md: 'h-11 px-5 text-sm',
-  lg: 'h-13 px-6 text-[15px]',
+  sm: 'h-9 px-4 text-[13px]',
+  md: 'h-11 px-5 text-[14px]',
+  lg: 'h-12 px-6 text-[14px]',
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -61,7 +61,7 @@ export function Button({
       {...rest}
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200',
+        'inline-flex items-center justify-center gap-2 rounded-full font-medium tracking-[-0.01em] transition-all duration-200',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         'disabled:cursor-not-allowed disabled:opacity-45',
         VARIANTS[variant],
@@ -81,10 +81,10 @@ export function Button({
 export type CardVariant = 'default' | 'accent' | 'success' | 'soft' | 'plain'
 
 const CARD_VARIANTS: Record<CardVariant, string> = {
-  default: 'bg-card border-line',
-  accent: 'bg-accent/8 border-accent/45',
+  default: 'bg-card border-line/70',
+  accent: 'bg-[#f4f4f6] border-line',
   success: 'bg-emerald-600/6 border-emerald-600/30',
-  soft: 'bg-ink/3 border-line',
+  soft: 'bg-ink/[0.03] border-transparent',
   plain: 'bg-transparent border-line',
 }
 
@@ -102,9 +102,9 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-2xl border shadow-[0_1px_2px_rgba(23,18,14,0.04)]',
+        'rounded-3xl border shadow-[0_1px_2px_rgb(17_17_19/0.02),0_12px_40px_-24px_rgb(17_17_19/0.10)]',
         CARD_VARIANTS[variant],
-        padded && 'p-4',
+        padded && 'p-5',
         className,
       )}
     >
@@ -126,8 +126,8 @@ export function Badge({
 }) {
   const tones: Record<string, string> = {
     neutral: 'bg-ink/6 text-ink/70',
-    accent: 'bg-accent/14 text-accent',
-    brand: 'bg-brand/10 text-brand',
+    accent: 'bg-ink/6 text-ink/70',
+    brand: 'bg-brand/6 text-brand',
     success: 'bg-emerald-600/12 text-emerald-700',
     warning: 'bg-amber-500/14 text-amber-700',
     danger: 'bg-red-600/12 text-red-700',
@@ -136,7 +136,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide',
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[-0.01em]',
         tones[tone],
         className,
       )}
@@ -180,7 +180,7 @@ export function Field({
 }
 
 const controlBase =
-  'w-full rounded-xl border border-line bg-card px-3.5 text-ink placeholder:text-ink/35 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
+  'w-full rounded-2xl border border-transparent bg-ink/[0.04] px-3.5 text-ink placeholder:text-ink/30 transition-colors focus:border-ink/20 focus:bg-card focus:outline-none focus:ring-2 focus:ring-ink/5'
 
 export type ControlSize = 'sm' | 'md'
 
@@ -194,7 +194,7 @@ export function Input({
       {...rest}
       className={cn(
         controlBase,
-        size === 'sm' ? 'h-10 text-[14px]' : 'h-12 text-[15px]',
+        size === 'sm' ? 'h-10 text-[14px]' : 'h-12 text-[16px]',
         className,
       )}
     />
@@ -232,7 +232,7 @@ export function Select({
         className={cn(
           controlBase,
           'appearance-none pr-10',
-          size === 'sm' ? 'h-10 text-[14px]' : 'h-12 text-[15px]',
+          size === 'sm' ? 'h-10 text-[14px]' : 'h-12 text-[16px]',
           className,
         )}
       >
@@ -393,9 +393,9 @@ export function Sheet({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 30, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-            className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-card shadow-2xl sm:max-w-lg sm:rounded-3xl"
+            className="relative z-10 flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[32px] bg-card shadow-2xl sm:max-w-xl sm:rounded-[32px]"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+            <div className="flex items-start justify-between gap-4 border-b border-line/60 px-6 py-5">
               <div className="min-w-0" id={titleId}>{title}</div>
               <button
                 type="button"
@@ -406,8 +406,8 @@ export function Sheet({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">{children}</div>
-            {footer && <div className="border-t border-line bg-card px-5 py-4">{footer}</div>}
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
+            {footer && <div className="border-t border-line/60 bg-card px-6 py-4 pb-safe">{footer}</div>}
           </motion.div>
         </motion.div>
       )}
@@ -452,7 +452,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.97 }}
               className={cn(
-                'pointer-events-auto flex max-w-sm items-center gap-2.5 rounded-full px-4 py-3 text-[13px] font-medium shadow-lg',
+                'pointer-events-auto flex max-w-sm items-center gap-2.5 rounded-full px-4 py-3 text-[13px] font-medium shadow-[0_12px_40px_rgb(0_0_0/0.18)]',
                 item.tone === 'success' && 'bg-emerald-700 text-white',
                 item.tone === 'error' && 'bg-red-700 text-white',
                 item.tone === 'info' && 'bg-ink text-white',
@@ -488,13 +488,9 @@ export function SectionTitle({
 }) {
   return (
     <div className={cn('max-w-2xl', align === 'center' && 'mx-auto text-center')}>
-      {eyebrow && (
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">{eyebrow}</p>
-      )}
-      <h2 className="font-display text-[30px] leading-[1.1] text-ink sm:text-[38px]">{title}</h2>
-      {description && (
-        <p className="mt-3 text-[15px] leading-relaxed text-ink/65">{description}</p>
-      )}
+      {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
+      <h2 className="display-section text-ink">{title}</h2>
+      {description && <p className="lede mt-4">{description}</p>}
     </div>
   )
 }
@@ -510,8 +506,8 @@ export function Stat({
 }) {
   return (
     <div>
-      <p className="font-display text-2xl leading-none text-ink">{value}</p>
-      <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">{label}</p>
+      <p className="text-2xl font-medium tracking-[-0.04em] leading-none text-ink">{value}</p>
+      <p className="mt-1.5 text-[11px] font-medium text-muted">{label}</p>
       {hint && <p className="mt-1 text-[12px] text-ink/50">{hint}</p>}
     </div>
   )
@@ -524,7 +520,7 @@ export function Stars({ rating, className }: { rating: number; className?: strin
         <svg key={i} viewBox="0 0 20 20" className="h-3.5 w-3.5">
           <path
             d="M10 1.6l2.47 5.01 5.53.8-4 3.9.94 5.5L10 14.2l-4.94 2.6.94-5.5-4-3.9 5.53-.8L10 1.6z"
-            fill={i < Math.round(rating) ? '#B9863F' : '#E4DACC'}
+            fill={i < Math.round(rating) ? '#111113' : '#DEDEE3'}
           />
         </svg>
       ))}
@@ -546,7 +542,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center rounded-2xl border border-dashed border-line bg-card/60 px-6 py-12 text-center">
       {icon && <div className="mb-3 text-ink/25">{icon}</div>}
-      <p className="font-display text-xl text-ink">{title}</p>
+      <p className="text-xl font-medium tracking-[-0.035em] text-ink">{title}</p>
       {description && <p className="mt-1.5 max-w-sm text-sm text-ink/55">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
@@ -554,5 +550,5 @@ export function EmptyState({
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded-xl bg-ink/8', className)} />
+  return <div className={cn('animate-pulse rounded-2xl bg-ink/8', className)} />
 }

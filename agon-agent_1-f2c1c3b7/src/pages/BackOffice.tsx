@@ -25,6 +25,7 @@ import {
 import { Badge, Button, Card, EmptyState, Field, Input, Select, Sheet, Textarea, useToast } from '../components/ui'
 import { Calendar } from '../components/Calendar'
 import { DemoNotice } from '../components/DemoNotice'
+import { BrandMark } from '../components/Brand'
 import {
   adjustBooking,
   confirmBooking,
@@ -54,6 +55,7 @@ import {
 } from '../lib/format'
 import { buildLine, computeTotals } from '../lib/pricing'
 import { unavailableDates } from '../lib/availability'
+import { providerTheme } from '../lib/theme'
 import { cn, slugify } from '../lib/utils'
 
 type Tone = 'neutral' | 'accent' | 'brand' | 'success' | 'warning' | 'danger'
@@ -209,18 +211,12 @@ export default function BackOffice() {
       <div
         className="flex min-h-screen items-center justify-center bg-paper px-4"
         style={
-          {
-            '--color-brand': provider.palette.brand,
-            '--color-accent': provider.palette.accent,
-            '--color-paper': provider.palette.paper,
-          } as React.CSSProperties
+          providerTheme(provider)
         }
       >
         <Card className="w-full max-w-sm p-6">
-          <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand text-accent">
-            <Lock className="h-5 w-5" />
-          </span>
-          <h1 className="font-display text-[26px] leading-tight text-ink">Espace prestataire</h1>
+          <BrandMark className="mb-5 !h-11 !w-11 !rounded-2xl" />
+          <h1 className="display-page text-ink">Espace prestataire</h1>
           <p className="mt-1.5 text-[13.5px] text-ink/60">
             {provider.displayName} · {provider.businessName}
           </p>
@@ -246,7 +242,7 @@ export default function BackOffice() {
           </Button>
 
           <DemoNotice className="mt-5">Démo locale : le code est affiché pour faciliter la présentation. Ce n’est pas une authentification de production.</DemoNotice>
-          <div className="mt-3 rounded-xl bg-accent/8 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink/60">
+          <div className="mt-3 rounded-2xl bg-ink/[0.035] px-3.5 py-3 text-[12.5px] leading-relaxed text-ink/60">
             <p className="font-semibold text-ink">Code de démonstration</p>
             <p className="mt-1">
               Utilisez <span className="font-mono font-bold text-accent">{provider.accessCode}</span> pour
@@ -270,20 +266,14 @@ export default function BackOffice() {
     <div
       className="min-h-screen bg-paper"
       style={
-        {
-          '--color-brand': provider.palette.brand,
-          '--color-accent': provider.palette.accent,
-          '--color-paper': provider.palette.paper,
-        } as React.CSSProperties
+        providerTheme(provider)
       }
     >
       {/* header */}
-      <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/93 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-line/60 bg-paper/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand text-accent">
-              <Music2 className="h-4.5 w-4.5" />
-            </span>
+            <BrandMark className="!h-9 !w-9 !rounded-2xl" />
             <div className="min-w-0">
               <p className="truncate font-display text-[17px] leading-tight text-ink">
                 {provider.displayName}
@@ -325,7 +315,7 @@ export default function BackOffice() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-7 sm:py-9">
         {tab === 'demandes' && (
           <DemandesTab
             provider={provider}
@@ -410,10 +400,10 @@ function DemandesTab({
           },
         ].map((k) => (
           <Card key={k.label} className="p-4">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">
+            <p className="text-[10.5px] font-medium text-ink/40">
               {k.label}
             </p>
-            <p className="mt-1.5 font-display text-[26px] leading-none text-ink">{k.value}</p>
+            <p className="mt-1.5 text-[26px] font-medium tracking-[-0.045em] leading-none text-ink">{k.value}</p>
             <p className="mt-1 text-[11.5px] text-ink/40">{k.hint}</p>
           </Card>
         ))}
@@ -476,7 +466,7 @@ function DemandesTab({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-display text-[18px] leading-tight text-ink">
+                  <p className="truncate text-[18px] font-medium tracking-[-0.035em] leading-tight text-ink">
                     {b.client.couple}
                   </p>
                   <p className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink/55">
@@ -486,7 +476,7 @@ function DemandesTab({
                 </div>
                 <Badge tone={STATUS_TONE[b.status]}>{STATUS_LABEL[b.status]}</Badge>
               </div>
-              <div className="mt-3 flex items-center justify-between border-t border-line pt-2.5 text-[12px]">
+              <div className="mt-3 flex items-center justify-between border-t border-line/60 pt-2.5 text-[12px]">
                 <span className="text-ink/50">
                   {b.formulaName}
                   {b.options.length > 0 ? ` +${b.options.length}` : ''}
@@ -523,7 +513,7 @@ function DemandesTab({
           <Sheet
             open={!!current}
             onClose={() => setSelected(null)}
-            title={<p className="font-display text-[20px] text-ink">Détail de la demande</p>}
+            title={<p className="text-[20px] font-medium tracking-[-0.035em] text-ink">Détail de la demande</p>}
           >
             {current && (
               <BookingDetail
@@ -632,7 +622,7 @@ function BookingDetail({
             <Badge tone={STATUS_TONE[booking.status]}>{STATUS_LABEL[booking.status]}</Badge>
             <span className="font-mono text-[11px] text-ink/40">{booking.code}</span>
           </div>
-          <h2 className="mt-2 font-display text-[24px] leading-tight text-ink">{booking.client.couple}</h2>
+          <h2 className="mt-2 text-[24px] font-medium tracking-[-0.045em] leading-tight text-ink">{booking.client.couple}</h2>
           <p className="mt-0.5 break-all text-[12.5px] text-ink/55">{booking.client.email} · {booking.client.phone}</p>
         </div>
         <button type="button" onClick={onClose} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink/40 hover:bg-ink/6" aria-label="Fermer">
@@ -642,27 +632,27 @@ function BookingDetail({
 
       <div className="space-y-4 p-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-line p-3">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Date demandée</p>
+          <div className="rounded-2xl border border-line/70 p-3">
+            <p className="text-[10.5px] font-medium text-ink/40">Date demandée</p>
             <p className="mt-1 text-[13.5px] font-semibold text-ink">{formatDateLong(booking.date)}</p>
             <p className="text-[12.5px] text-ink/55">{SLOT_LABEL[booking.slot]} · {booking.client.eventType}</p>
           </div>
-          <div className="rounded-xl border border-line p-3">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Lieu</p>
+          <div className="rounded-2xl border border-line/70 p-3">
+            <p className="text-[10.5px] font-medium text-ink/40">Lieu</p>
             <p className="mt-1 text-[13.5px] font-semibold text-ink">{booking.client.venue || '—'}</p>
             <p className="text-[12.5px] text-ink/55">{booking.client.city}{booking.client.guestCount ? ` · ${booking.client.guestCount} invités` : ''}</p>
           </div>
         </div>
 
         {booking.client.message && (
-          <div className="rounded-xl border-l-2 border-accent/50 bg-accent/6 px-3.5 py-3 text-[13px] leading-relaxed text-ink/70">“{booking.client.message}”</div>
+          <div className="rounded-2xl border-l-2 border-line bg-ink/[0.03] px-3.5 py-3 text-[13px] leading-relaxed text-ink/70">“{booking.client.message}”</div>
         )}
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Offre & options</p>
+            <p className="text-[10.5px] font-medium text-ink/40">Offre & options</p>
             {canEditQuote ? (
-              <button type="button" onClick={() => setEditing((e) => !e)} className="text-[12px] font-semibold text-accent hover:underline">
+              <button type="button" onClick={() => setEditing((e) => !e)} className="text-[12px] font-semibold text-ink hover:underline">
                 {editing ? 'Fermer sans enregistrer' : 'Régler'}
               </button>
             ) : (
@@ -678,7 +668,7 @@ function BookingDetail({
                 </Select>
               </Field>
               {lines.map((l) => (
-                <div key={l.optionId} className="rounded-xl border border-line p-3">
+                <div key={l.optionId} className="rounded-2xl border border-line/70 p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[13px] font-semibold text-ink">{l.name}</p>
                     <button type="button" onClick={() => setLines((prev) => prev.filter((x) => x.optionId !== l.optionId))} className="text-ink/30 hover:text-red-600" aria-label={`Retirer ${l.name}`}>
@@ -699,7 +689,7 @@ function BookingDetail({
                 </div>
               ))}
               {availableOptions.length > 0 && (
-                <div className="rounded-xl border border-dashed border-line p-3">
+                <div className="rounded-2xl border border-dashed border-line/70 p-3">
                   <p className="mb-2 text-[11.5px] font-semibold text-ink/55">Ajouter une option</p>
                   <div className="flex gap-2">
                     <Select value={addOptionId} onChange={(e) => setAddOptionId(e.target.value)} size="sm">
@@ -710,14 +700,14 @@ function BookingDetail({
                   </div>
                 </div>
               )}
-              <div className="rounded-xl bg-ink/4 p-3">
-                <div className="flex items-center justify-between text-[13px] text-ink/60"><span>Total</span><span className="font-display text-[20px] text-ink">{money(totals.total)}</span></div>
+              <div className="rounded-2xl bg-ink/4 p-3">
+                <div className="flex items-center justify-between text-[13px] text-ink/60"><span>Total</span><span className="text-[20px] font-medium tracking-[-0.035em] text-ink">{money(totals.total)}</span></div>
                 <div className="flex items-center justify-between text-[12.5px] text-ink/50"><span>Acompte {provider.depositPercent} %</span><span>{money(totals.depositAmount)}</span></div>
                 <Button className="mt-3" full size="sm" onClick={saveOptions} loading={busy}>Enregistrer les ajustements</Button>
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-line">
+            <div className="rounded-2xl border border-line">
               <div className="flex items-center justify-between border-b border-line px-3.5 py-2.5">
                 <span className="text-[13.5px] font-semibold text-ink">{booking.formulaName}</span>
                 <span className="text-[13.5px] font-medium text-ink">{money(booking.formulaPrice)}</span>
@@ -730,17 +720,17 @@ function BookingDetail({
               ))}
               <div className="flex items-center justify-between bg-ink/3 px-3.5 py-2.5">
                 <span className="text-[13px] font-semibold text-ink">Total</span>
-                <span className="font-display text-[19px] text-ink">{money(booking.pricing.total)}</span>
+                <span className="text-[19px] font-medium tracking-[-0.035em] text-ink">{money(booking.pricing.total)}</span>
               </div>
             </div>
           )}
           {!canEditQuote && <p className="mt-2 text-[11.5px] leading-relaxed text-ink/45">Le devis est verrouillé après confirmation : le client paie exactement le montant affiché.</p>}
         </div>
 
-        <div className={cn('rounded-xl border p-3', booking.deposit.status === 'paye' ? 'border-emerald-600/30 bg-emerald-600/5' : 'border-accent/40 bg-accent/6')}>
+        <div className={cn('rounded-2xl border p-3', booking.deposit.status === 'paye' ? 'border-emerald-600/30 bg-emerald-600/5' : 'border-line/70 bg-ink/[0.03]')}>
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-ink"><CreditCard className="h-3.5 w-3.5" /> Acompte {booking.pricing.depositPercent} %</p>
-            <p className="font-display text-[19px] text-ink">{money(booking.deposit.amount)}</p>
+            <p className="text-[19px] font-medium tracking-[-0.035em] text-ink">{money(booking.deposit.amount)}</p>
           </div>
           {booking.deposit.status === 'paye' ? (
             <p className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium text-emerald-700"><Check className="h-3.5 w-3.5" /> Reçu · {booking.deposit.reference}</p>
@@ -749,7 +739,7 @@ function BookingDetail({
           )}
         </div>
 
-        {editing && <p className="rounded-lg bg-accent/8 px-3 py-2 text-[12px] text-ink/60">Enregistrez ou fermez les ajustements avant d’agir sur la date.</p>}
+        {editing && <p className="rounded-2xl bg-ink/[0.035] px-3 py-2 text-[12px] text-ink/60">Enregistrez ou fermez les ajustements avant d’agir sur la date.</p>}
 
         <div className="flex flex-wrap gap-2">
           {booking.status === 'proposee' && (
@@ -767,7 +757,7 @@ function BookingDetail({
         </div>
 
         <div>
-          <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Note interne</p>
+          <p className="mb-1.5 text-[10.5px] font-medium text-ink/40">Note interne</p>
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Précisions sur la date, le matériel, le trajet…" size="sm" />
           {note !== (booking.note ?? '') && (
             <Button size="sm" variant="secondary" className="mt-2" loading={busy} onClick={() => run(() => saveBookingNote(provider.id, booking.code, note), 'Note enregistrée.')}>Enregistrer la note</Button>
@@ -775,11 +765,11 @@ function BookingDetail({
         </div>
 
         <div>
-          <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Historique</p>
+          <p className="mb-2 text-[10.5px] font-medium text-ink/40">Historique</p>
           <ol className="space-y-2">
             {booking.timeline.map((t, i) => (
               <li key={i} className="flex gap-2.5">
-                <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', t.actor === 'prestataire' ? 'bg-accent' : t.actor === 'systeme' ? 'bg-emerald-600' : 'bg-brand')} />
+                <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', t.actor === 'prestataire' ? 'bg-ink/50' : t.actor === 'systeme' ? 'bg-emerald-600' : 'bg-brand')} />
                 <div>
                   <p className="text-[13px] font-medium text-ink">{t.label}</p>
                   {t.detail && <p className="text-[12px] text-ink/50">{t.detail}</p>}
@@ -794,7 +784,7 @@ function BookingDetail({
       <Sheet
         open={sheetOpen}
         onClose={() => { if (!busy) setSheetOpen(false) }}
-        title={<p className="font-display text-[22px] text-ink">Proposer une autre date</p>}
+        title={<p className="text-[22px] font-medium tracking-[-0.04em] text-ink">Proposer une autre date</p>}
         footer={<Button full disabled={!altDate || busy} onClick={() => { void run(() => proposeAlternativeDate(provider.id, booking.code, altDate), 'Autre date proposée au client.'); setSheetOpen(false) }}>Proposer cette date</Button>}
       >
         <div className="space-y-4">
@@ -806,7 +796,7 @@ function BookingDetail({
       <Sheet
         open={manualPayOpen}
         onClose={() => { if (!busy) setManualPayOpen(false) }}
-        title={<p className="font-display text-[22px] text-ink">Marquer l’acompte reçu</p>}
+        title={<p className="text-[22px] font-medium tracking-[-0.04em] text-ink">Marquer l’acompte reçu</p>}
         footer={
           <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" disabled={busy} onClick={() => setManualPayOpen(false)}>Annuler</Button>
@@ -858,7 +848,7 @@ function OffresTab({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-[26px] text-ink">Formules & options</h2>
+          <h2 className="display-page text-ink">Formules & options</h2>
           <p className="text-[13px] text-ink/55">
             Ces tarifs sont ceux affichés sur votre page publique.
           </p>
@@ -931,7 +921,7 @@ function OffresTab({
       ))}
 
       <div className="flex items-center justify-between pt-2">
-        <h3 className="font-display text-[22px] text-ink">Options</h3>
+        <h3 className="text-[22px] font-medium tracking-[-0.04em] text-ink">Options</h3>
         <Button
           size="sm"
           variant="outline"
@@ -1059,7 +1049,7 @@ function DispoTab({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-[26px] text-ink">Dates indisponibles</h2>
+          <h2 className="display-page text-ink">Dates indisponibles</h2>
           <p className="text-[13px] text-ink/55">
             Les clients ne peuvent pas les proposer dans le calendrier de réservation.
           </p>
@@ -1085,7 +1075,7 @@ function DispoTab({
         </Card>
 
         <Card>
-          <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">
+          <p className="mb-3 text-[10.5px] font-medium text-ink/40">
             Liste ({blocked.length})
           </p>
           {blocked.length === 0 ? (
@@ -1095,7 +1085,7 @@ function DispoTab({
               {blocked.map((d) => (
                 <div
                   key={d}
-                  className="flex items-center justify-between rounded-lg bg-ink/4 px-3 py-2 text-[13px]"
+                  className="flex items-center justify-between rounded-xl bg-ink/4 px-3 py-2 text-[13px]"
                 >
                   <span className="text-ink/70">{formatDateShort(d)}</span>
                   <button
@@ -1156,7 +1146,7 @@ function ReglagesTab({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-[26px] text-ink">Réglages de l’instance</h2>
+          <h2 className="display-page text-ink">Réglages de l’instance</h2>
           <p className="text-[13px] text-ink/55">
             Ces réglages n’affectent que {draft.displayName}.
           </p>
@@ -1232,7 +1222,7 @@ function ReglagesTab({
       </Card>
 
       <Card>
-        <p className="mb-3 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.13em] text-ink/40">
+        <p className="mb-3 flex items-center gap-1.5 text-[12px] font-medium text-ink/40">
           <Wallet className="h-3.5 w-3.5" /> Acompte
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -1249,7 +1239,7 @@ function ReglagesTab({
             />
           </Field>
           <div className="flex items-end">
-            <p className="rounded-xl bg-accent/10 px-3.5 py-2.5 text-[12.5px] leading-snug text-ink/65">
+            <p className="rounded-2xl bg-ink/[0.04] px-3.5 py-2.5 text-[12.5px] leading-snug text-ink/65">
               Sur une formule à 890 €, l’acompte sera de{' '}
               <strong className="text-ink">
                 {money((890 * draft.depositPercent) / 100)}
@@ -1261,7 +1251,7 @@ function ReglagesTab({
       </Card>
 
       <Card>
-        <p className="mb-3 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.13em] text-ink/40">
+        <p className="mb-3 flex items-center gap-1.5 text-[12px] font-medium text-ink/40">
           <Palette className="h-3.5 w-3.5" /> Apparence
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -1273,7 +1263,7 @@ function ReglagesTab({
                 onChange={(e) =>
                   set('palette', { ...draft.palette, brand: e.target.value })
                 }
-                className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-line bg-card p-1"
+                className="h-10 w-12 shrink-0 cursor-pointer rounded-xl border border-line bg-card p-1"
               />
               <Input
                 value={draft.palette.brand}
@@ -1292,7 +1282,7 @@ function ReglagesTab({
                 onChange={(e) =>
                   set('palette', { ...draft.palette, accent: e.target.value })
                 }
-                className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-line bg-card p-1"
+                className="h-10 w-12 shrink-0 cursor-pointer rounded-xl border border-line bg-card p-1"
               />
               <Input
                 value={draft.palette.accent}
@@ -1311,7 +1301,7 @@ function ReglagesTab({
                 onChange={(e) =>
                   set('palette', { ...draft.palette, paper: e.target.value })
                 }
-                className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-line bg-card p-1"
+                className="h-10 w-12 shrink-0 cursor-pointer rounded-xl border border-line bg-card p-1"
               />
               <Input
                 value={draft.palette.paper}
@@ -1326,7 +1316,7 @@ function ReglagesTab({
       </Card>
 
       <Card>
-        <p className="mb-3 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.13em] text-ink/40">
+        <p className="mb-3 flex items-center gap-1.5 text-[12px] font-medium text-ink/40">
           <KeyRound className="h-3.5 w-3.5" /> Accès
         </p>
         <div className="grid gap-3 sm:grid-cols-2">

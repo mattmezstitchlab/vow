@@ -9,17 +9,18 @@ import {
   Clock,
   Info,
   Loader2,
-  Music2,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
 import { Button, Card, Field, Input, QtyStepper, Segmented, Select, Textarea, useToast } from '../components/ui'
 import { Calendar } from '../components/Calendar'
 import { DemoNotice } from '../components/DemoNotice'
+import { BrandMark } from '../components/Brand'
 import { createBooking, getProviderBySlug, getUnavailableDates, subscribeData } from '../lib/store'
 import type { BookingLine, ProviderInstance, Slot } from '../lib/types'
 import { EVENT_TYPES, SLOT_LABEL, formatDateLong, money, optionUnitLabel, todayISO } from '../lib/format'
 import { buildLine, computeTotals, derivedOptionQty } from '../lib/pricing'
+import { providerTheme } from '../lib/theme'
 import { cn, uid } from '../lib/utils'
 
 const STEPS = ['Formule', 'Options', 'Date', 'Vous', 'Validation']
@@ -265,7 +266,7 @@ export default function BookingWizard() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-paper px-4">
         <Card className="max-w-sm text-center">
-          <p className="font-display text-xl text-ink">Prestataire introuvable</p>
+          <p className="text-xl font-medium tracking-[-0.035em] text-ink">Prestataire introuvable</p>
           <Link to="/">
             <Button className="mt-4" variant="outline">Retour</Button>
           </Link>
@@ -287,14 +288,10 @@ export default function BookingWizard() {
     <div
       className="min-h-screen bg-paper"
       style={
-        {
-          '--color-brand': provider.palette.brand,
-          '--color-accent': provider.palette.accent,
-          '--color-paper': provider.palette.paper,
-        } as React.CSSProperties
+        providerTheme(provider)
       }
     >
-      <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/92 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-line/60 bg-paper/85 backdrop-blur-xl">
         <div className="mx-auto max-w-2xl px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <button
@@ -304,9 +301,9 @@ export default function BookingWizard() {
             >
               <ArrowLeft className="h-4 w-4" /> {step === 0 ? 'Retour' : 'Précédent'}
             </button>
-            <div className="flex min-w-0 items-center gap-2">
-              <Music2 className="h-4 w-4 shrink-0 text-accent" />
-              <span className="truncate text-[13px] font-semibold text-ink">{provider.displayName}</span>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <BrandMark className="!h-7 !w-7 !rounded-lg" />
+              <span className="truncate text-[13px] font-medium text-ink">{provider.displayName}</span>
             </div>
           </div>
           <ol className="mt-3 flex items-center gap-1" aria-label="Étapes de réservation">
@@ -322,7 +319,7 @@ export default function BookingWizard() {
                 />
                 <span
                   className={cn(
-                    'hidden text-[10.5px] font-semibold uppercase tracking-wide sm:block',
+                    'hidden text-[10.5px] font-medium tracking-[-0.01em] sm:block',
                     i === step ? 'text-ink' : 'text-ink/35',
                   )}
                 >
@@ -342,7 +339,7 @@ export default function BookingWizard() {
 
         {step === 0 && (
           <section>
-            <h1 className="font-display text-[32px] leading-tight text-ink">
+            <h1 className="display-page text-ink">
               Quelle formule pour votre mariage ?
             </h1>
             <p className="mt-2 text-[14.5px] text-ink/55">
@@ -366,7 +363,7 @@ export default function BookingWizard() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="font-display text-[22px] leading-tight text-ink">{f.name}</h3>
+                        <h3 className="text-[21px] font-medium tracking-[-0.035em] leading-tight text-ink">{f.name}</h3>
                         <p className="mt-0.5 text-[13px] text-accent">{f.tagline}</p>
                       </div>
                       <span
@@ -386,11 +383,11 @@ export default function BookingWizard() {
                         </li>
                       ))}
                     </ul>
-                    <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
+                    <div className="mt-4 flex items-center justify-between border-t border-line/60 pt-3">
                       <span className="inline-flex items-center gap-1.5 text-[12.5px] text-ink/50">
                         <Clock className="h-3.5 w-3.5" /> {f.duration}
                       </span>
-                      <span className="font-display text-[24px] leading-none text-ink">{money(f.price)}</span>
+                      <span className="text-[23px] font-medium tracking-[-0.04em] leading-none text-ink">{money(f.price)}</span>
                     </div>
                   </button>
                 )
@@ -401,7 +398,7 @@ export default function BookingWizard() {
 
         {step === 1 && (
           <section>
-            <h1 className="font-display text-[32px] leading-tight text-ink">Composez votre prestation</h1>
+            <h1 className="display-page text-ink">Composez votre prestation</h1>
             <p className="mt-2 text-[14.5px] text-ink/55">
               Ajoutez uniquement ce dont vous avez besoin. Le total se met à jour immédiatement.
             </p>
@@ -410,7 +407,7 @@ export default function BookingWizard() {
             )}
             {optionGroups.map(([group, options]) => (
               <div key={group} className="mt-6">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink/40">{group}</p>
+                <p className="mb-2 text-[11px] font-bold font-medium text-ink/40">{group}</p>
                 <Card padded={false} className="divide-y divide-line">
                   {options.map((o) => {
                     const selected = (form.optionQty[o.id] ?? 0) > 0
@@ -482,7 +479,7 @@ export default function BookingWizard() {
 
         {step === 2 && (
           <section>
-            <h1 className="font-display text-[32px] leading-tight text-ink">Proposez votre date</h1>
+            <h1 className="display-page text-ink">Proposez votre date</h1>
             <p className="mt-2 text-[14.5px] text-ink/55">
               Les dates indisponibles sont grisées. {provider.displayName} confirmera la demande depuis son back-office.
             </p>
@@ -496,12 +493,12 @@ export default function BookingWizard() {
               {errors.date && <p className="mt-2 text-[12.5px] font-medium text-red-600">{errors.date}</p>}
             </div>
             {form.date && (
-              <div className="mt-3 flex items-center gap-2 rounded-xl bg-accent/10 px-3.5 py-2.5 text-[13px] font-medium text-ink">
+              <div className="mt-3 flex items-center gap-2 rounded-2xl bg-accent/10 px-3.5 py-2.5 text-[13px] font-medium text-ink">
                 <CalendarDays className="h-4 w-4 text-accent" /> {formatDateLong(form.date)}
               </div>
             )}
             <div className="mt-6">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink/40">Créneau</p>
+              <p className="mb-2 text-[11px] font-bold font-medium text-ink/40">Créneau</p>
               <Segmented
                 value={form.slot}
                 onChange={(v) => set('slot', v)}
@@ -561,7 +558,7 @@ export default function BookingWizard() {
 
         {step === 3 && (
           <section>
-            <h1 className="font-display text-[32px] leading-tight text-ink">Vos coordonnées</h1>
+            <h1 className="display-page text-ink">Vos coordonnées</h1>
             <p className="mt-2 text-[14.5px] text-ink/55">
               Elles servent à traiter votre demande. En démo, aucun e-mail n’est envoyé : la confirmation
               est visible sur votre lien de suivi.
@@ -580,7 +577,7 @@ export default function BookingWizard() {
                 <Input type="tel" value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="06 12 34 56 78" autoComplete="tel" inputMode="tel" />
               </Field>
             </div>
-            <div className="mt-6 rounded-2xl border border-line bg-card p-4">
+            <div className="mt-6 rounded-2xl border border-line/70 bg-card p-4">
               <p className="flex items-center gap-2 text-[13px] font-semibold text-ink">
                 <ShieldCheck className="h-4 w-4 text-accent" /> Données de démonstration
               </p>
@@ -594,25 +591,25 @@ export default function BookingWizard() {
 
         {step === 4 && formula && (
           <section>
-            <h1 className="font-display text-[32px] leading-tight text-ink">Récapitulatif</h1>
+            <h1 className="display-page text-ink">Récapitulatif</h1>
             <p className="mt-2 text-[14.5px] text-ink/55">
               Votre date sera proposée à {provider.displayName}. L’acompte ne sera payable qu’après confirmation.
             </p>
             <Card className="mt-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-display text-[22px] leading-tight text-ink">{formula.name}</p>
+                  <p className="text-[21px] font-medium tracking-[-0.035em] leading-tight text-ink">{formula.name}</p>
                   <p className="text-[13px] text-accent">{formula.tagline}</p>
                 </div>
-                <p className="font-display text-[22px] text-ink">{money(formula.price)}</p>
+                <p className="text-[21px] font-medium tracking-[-0.035em] text-ink">{money(formula.price)}</p>
               </div>
               {form.date && (
-                <div className="mt-4 flex items-center gap-2 border-t border-line pt-3 text-[13.5px] text-ink/70">
+                <div className="mt-4 flex items-center gap-2 border-t border-line/60 pt-3 text-[13.5px] text-ink/70">
                   <CalendarDays className="h-4 w-4 text-accent" /> {formatDateLong(form.date)} · {SLOT_LABEL[form.slot]}
                 </div>
               )}
               {lines.length > 0 && (
-                <div className="mt-3 space-y-2 border-t border-line pt-3">
+                <div className="mt-3 space-y-2 border-t border-line/60 pt-3">
                   {lines.map((l) => (
                     <div key={l.optionId} className="flex items-center justify-between gap-3">
                       <span className="text-[13.5px] text-ink/70">
@@ -624,12 +621,12 @@ export default function BookingWizard() {
                   ))}
                 </div>
               )}
-              <div className="mt-4 space-y-2 border-t border-line pt-3">
+              <div className="mt-4 space-y-2 border-t border-line/60 pt-3">
                 <div className="flex items-center justify-between text-[13.5px] text-ink/60"><span>Formule</span><span>{money(totals.subtotal)}</span></div>
                 <div className="flex items-center justify-between text-[13.5px] text-ink/60"><span>Options</span><span>{money(totals.optionsTotal)}</span></div>
-                <div className="flex items-baseline justify-between border-t border-line pt-2.5">
+                <div className="flex items-baseline justify-between border-t border-line/60 pt-2.5">
                   <span className="font-semibold text-ink">Total TTC</span>
-                  <span className="font-display text-[28px] leading-none text-ink">{money(totals.total)}</span>
+                  <span className="text-[27px] font-medium tracking-[-0.045em] leading-none text-ink">{money(totals.total)}</span>
                 </div>
               </div>
             </Card>
@@ -645,16 +642,16 @@ export default function BookingWizard() {
                 </div>
               </div>
             </Card>
-            <div className="mt-5 rounded-2xl border border-line bg-card p-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink/40">Client</p>
+            <div className="mt-5 rounded-2xl border border-line/70 bg-card p-4">
+              <p className="text-[11px] font-bold font-medium text-ink/40">Client</p>
               <p className="mt-1.5 text-[14px] font-semibold text-ink">{form.firstName} {form.lastName}</p>
               <p className="text-[13px] text-ink/60">{form.email} · {form.phone}</p>
               <p className="mt-2 text-[13px] text-ink/60">
                 {form.eventType}{form.venue ? ` · ${form.venue}` : ''}{form.city ? ` (${form.city})` : ''}{form.guestCount ? ` · ${form.guestCount} invités` : ''}
               </p>
-              {form.message && <p className="mt-2.5 border-l-2 border-accent/40 pl-3 text-[13px] italic leading-relaxed text-ink/60">{form.message}</p>}
+              {form.message && <p className="mt-2.5 border-l-2 border-line/70 pl-3 text-[13px] leading-relaxed text-ink/60">{form.message}</p>}
             </div>
-            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-card p-3.5">
+            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-line/70 bg-card p-3.5">
               <input
                 type="checkbox"
                 checked={form.consent}
@@ -663,11 +660,11 @@ export default function BookingWizard() {
               />
               <span className="text-[12.5px] leading-relaxed text-ink/65">
                 Je comprends qu’il s’agit d’une démonstration : aucun débit réel, aucun e-mail envoyé.
-                J’ai pris connaissance des <Link to="/legal" target="_blank" className="font-semibold text-accent underline">informations légales</Link>.
+                J’ai pris connaissance des <Link to="/legal" target="_blank" className="font-medium text-ink underline">informations légales</Link>.
               </span>
             </label>
             {errors.consent && <p className="mt-2 text-[12.5px] font-medium text-red-600">{errors.consent}</p>}
-            <div className="mt-4 flex items-start gap-2 rounded-xl bg-ink/4 px-3.5 py-3 text-[12px] leading-relaxed text-ink/55">
+            <div className="mt-4 flex items-start gap-2 rounded-2xl bg-ink/4 px-3.5 py-3 text-[12px] leading-relaxed text-ink/55">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               En envoyant, vous proposez une date — vous ne payez rien maintenant. Votre lien de suivi
               affichera la confirmation du prestataire puis le paiement simulé de l’acompte.
@@ -676,12 +673,12 @@ export default function BookingWizard() {
         )}
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 backdrop-blur-md">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line/60 bg-paper/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 pt-3 pb-safe">
           {formula ? (
             <div className="min-w-0">
               <p className="truncate text-[11px] uppercase tracking-wider text-ink/45">{formula.name}</p>
-              <p className="font-display text-[20px] leading-none text-ink">{money(totals.total)}</p>
+              <p className="text-[20px] font-medium tracking-[-0.035em] leading-none text-ink">{money(totals.total)}</p>
             </div>
           ) : (
             <p className="text-[12.5px] text-ink/45">Choisissez une formule</p>
