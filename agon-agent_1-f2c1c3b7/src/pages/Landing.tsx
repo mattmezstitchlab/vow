@@ -12,7 +12,6 @@ import {
   Music2,
   Plus,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react'
 import { Brand, BrandMark } from '../components/Brand'
 import { listBookings, listProviders } from '../lib/store'
@@ -64,20 +63,20 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* Hero centré, cartes flottantes sur les côtés. */}
+      {/* Hero immersif : un seul profil, suspendu par son cordon. */}
       <section className="immersive-hero relative overflow-hidden">
         <div className="immersive-ambience" aria-hidden><div className="ambient-orb ambient-orb-rose" /><div className="ambient-orb ambient-orb-cyan" /><div className="ambient-orb ambient-orb-peach" /></div>
-        <div className="relative z-10 mx-auto min-h-[860px] max-w-[1440px] px-5 pt-32 sm:min-h-[900px] sm:pt-36">
-          <div className="relative z-10 mx-auto max-w-[680px] text-center fade-up">
+        <div className="relative z-10 mx-auto flex min-h-[1020px] max-w-[1440px] flex-col items-center px-5 pb-16 pt-32 sm:px-8 sm:pt-36 lg:min-h-[900px] lg:flex-row lg:justify-between lg:gap-10 lg:px-12 lg:py-28">
+          <div className="relative z-10 mx-auto max-w-[680px] text-center fade-up lg:mx-0 lg:w-[58%] lg:text-left">
             <p className="eyebrow mb-5">Plateforme de réservation multi-métiers</p>
             <h1 className="display-hero">
               Votre métier.<br />Vos règles.<br />Votre lien.
             </h1>
-            <p className="lede mx-auto mt-7 max-w-[500px]">
+            <p className="lede mx-auto mt-7 max-w-[500px] lg:mx-0">
               Formules, options et disponibilités pensées pour l’activité de chaque prestataire.
               Une page publique et un espace indépendant par instance.
             </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
               <a href="#prestataires" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-[14px] font-medium tracking-[-0.01em] text-ink transition-colors hover:bg-white/90">
                 Découvrir la démo <ArrowRight className="h-4 w-4" />
               </a>
@@ -90,22 +89,13 @@ export default function Landing() {
             </p>
           </div>
 
-          {/* Desktop : composition en orbite autour du titre. */}
-          <div className="pointer-events-none absolute inset-0 hidden xl:block" aria-hidden>
-            {providers.slice(0, 5).map((p, i) => (
-              <FloatCard key={p.id} provider={p} index={i} className="pointer-events-auto" />
-            ))}
-          </div>
-
-          {/* Mobile : trois cartes sous le texte, sans chevauchement du titre. */}
-          <div className="relative mx-auto mt-14 flex h-[280px] max-w-[420px] items-start justify-center xl:hidden">
-            {providers.slice(0, 3).map((p, i) => (
-              <MobileFloat key={p.id} provider={p} index={i} />
-            ))}
-          </div>
+          {hero && (
+            <div className="relative z-0 mt-32 w-full max-w-[400px] lg:mt-0 lg:w-[34%] lg:max-w-[420px] lg:translate-y-10">
+              <HeroProviderCard provider={hero} />
+            </div>
+          )}
         </div>
       </section>
-      <div className="pixel-divider" aria-hidden />
 
       {/* Aperçu produit sur fond clair : contraste après le hero immersif. */}
       <section id="parcours" className="section-light relative overflow-hidden">
@@ -228,8 +218,8 @@ export default function Landing() {
           <div className="relative mx-auto mt-14 w-[280px]">
             <div className="aurora-glow absolute -inset-10 rounded-full" aria-hidden />
             <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-[#0b0b12]/80 p-6 text-left backdrop-blur-xl">
-              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full border-2 border-white/80 bg-gradient-to-br from-emerald-400/40 to-purple-500/40">
-                <Sparkles className="h-7 w-7 text-white" />
+              <div data-testid="studio-logo-orb" className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full border-2 border-white/80 bg-gradient-to-br from-emerald-400/50 via-cyan-400/30 to-purple-500/60 shadow-[0_12px_45px_-16px_rgba(120,80,220,0.8)]">
+                <BrandMark dark className="!h-14 !w-14" />
               </div>
               <p className="text-center text-[20px] font-medium tracking-[-0.03em] text-white">Votre nom</p>
               <p className="mt-1 text-center text-[13px] text-white/50">Saxophone de mariage</p>
@@ -271,57 +261,41 @@ export default function Landing() {
   )
 }
 
-/* ------------------------------------------------------------------ cards */
+/* ------------------------------------------------------------------ hero card */
 
-const FLOAT_POSITIONS = [
-  'left-[3%] top-[120px]',
-  'left-[15%] top-[440px]',
-  'right-[4%] top-[100px]',
-  'right-[16%] top-[460px]',
-  'left-[43%] top-[660px] opacity-90 scale-90',
-]
-const FLOAT_TILTS = ['-10deg', '7deg', '9deg', '-7deg', '3deg']
+function HeroProviderCard({ provider }: { provider: ProviderInstance }) {
+  const startingPrice = Math.min(...provider.formulas.map((formula) => formula.price))
 
-function FloatCard({ provider, index, className }: { provider: ProviderInstance; index: number; className?: string }) {
   return (
-    <Link
-      to={`/p/${provider.slug}`}
-      className={cn('provider-float fade-up', FLOAT_POSITIONS[index], className)}
-      style={{ '--card-tilt': FLOAT_TILTS[index], '--strap': strapColor(index), animationDelay: `${index * 90}ms` } as React.CSSProperties}
-      aria-label={`Voir la page de ${provider.displayName}`}
-    >
-      <span className="lanyard-strap" />
-      <div className={cn('provider-float-inner', cardGradient(index))}>
-        <img src={provider.coverPhoto} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/10" />
-        <span className="lanyard-slot" />
-        <div className="absolute inset-x-0 bottom-0 bg-white/80 p-3.5 backdrop-blur-xl">
-          <p className="truncate text-[15px] font-medium tracking-[-0.03em] text-ink">{provider.displayName}</p>
-          <p className="mt-0.5 truncate text-[11px] text-ink/50">{provider.city}</p>
-          <div className="mt-2.5 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-ink/70">dès {money(Math.min(...provider.formulas.map((f) => f.price)))}</span>
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-white"><ArrowUpRight className="h-3 w-3" /></span>
+    <div className="hero-card-sway">
+      <Link
+        to={`/p/${provider.slug}`}
+        className="hero-provider-link group block"
+        style={{ '--strap': strapColor(0) } as React.CSSProperties}
+        aria-label={`Voir la page de ${provider.displayName}`}
+        data-testid="hero-provider-card"
+      >
+        <span className="lanyard-strap hero-lanyard" aria-hidden />
+        <div className={cn('hero-card-inner', cardGradient(0))}>
+          <img src={provider.coverPhoto} alt="" className="hero-card-photo absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10" />
+          <span className="lanyard-slot hero-lanyard-slot" aria-hidden />
+          <div className="absolute inset-x-0 bottom-0 bg-white/85 p-5 backdrop-blur-xl sm:p-6">
+            <p className="truncate text-[24px] font-medium tracking-[-0.04em] text-ink">{provider.displayName}</p>
+            <p className="mt-1 truncate text-[14px] text-ink/55">{provider.tagline}</p>
+            <div className="mt-5 flex items-center justify-between border-t border-ink/10 pt-4">
+              <div>
+                <p className="text-[11px] text-ink/45">À partir de</p>
+                <p className="mt-0.5 text-[16px] font-medium tracking-[-0.02em] text-ink">{money(startingPrice)}</p>
+              </div>
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white transition-transform duration-700 ease-out group-hover:translate-x-1">
+                <ArrowUpRight className="h-5 w-5" />
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-    </Link>
-  )
-}
-
-function MobileFloat({ provider, index }: { provider: ProviderInstance; index: number }) {
-  const pos = ['left-0 top-6 z-10', 'left-1/2 top-0 -translate-x-1/2 z-20', 'right-0 top-8 z-10'][index]
-  return (
-    <Link to={`/p/${provider.slug}`} className={cn('mobile-provider-card absolute w-[136px]', pos)} style={{ '--card-tilt': ['-8deg', '0deg', '8deg'][index], '--strap': strapColor(index) } as React.CSSProperties} aria-label={`Voir ${provider.displayName}`}>
-      <span className="lanyard-strap carousel-strap" />
-      <div className={cn('relative overflow-hidden rounded-[18px] float-shadow aspect-[3/4]', cardGradient(index))}>
-        <img src={provider.coverPhoto} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
-        <span className="lanyard-slot !top-2 !w-8 !h-1" />
-        <div className="absolute inset-x-0 bottom-0 bg-white/85 p-2.5 backdrop-blur-xl">
-          <p className="truncate text-[12px] font-medium tracking-[-0.02em]">{provider.displayName}</p>
-          <p className="truncate text-[10px] text-ink/50">{provider.city}</p>
-        </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   )
 }
 

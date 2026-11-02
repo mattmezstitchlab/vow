@@ -1,18 +1,19 @@
 import { Link } from 'react-router-dom'
 import { cn } from '../lib/utils'
 
-/** Marque Noria : pictogramme simple en squircle, typographie sans serif. */
+/** Symbole Noria en SVG, sans tuile ni fond carré. */
 export function BrandMark({ className, dark = false }: { className?: string; dark?: boolean }) {
   return (
     <span
       className={cn(
-        'flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] shadow-[0_2px_8px_rgb(0_0_0/0.12)]',
-        dark ? 'bg-white text-black' : 'bg-gradient-to-b from-white to-[#ececef] text-black ring-1 ring-black/5',
+        'inline-flex h-10 w-10 shrink-0 items-center justify-center',
+        dark ? 'text-white' : 'text-ink',
         className,
       )}
+      data-testid="brand-mark"
       aria-hidden
     >
-      <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
+      <svg viewBox="0 0 24 24" className="h-full w-full" fill="none">
         <circle cx="12" cy="12" r="8.8" stroke="#8b5cf6" strokeWidth="0.8" strokeDasharray="2 2.5" opacity="0.7" />
         <path d="M12 6.7v3m5.3 2.3h-3m-2.3 5.3v-3m-5.3-2.3h3" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
         <circle cx="12" cy="3.7" r="2.05" fill="#8b5cf6" />
@@ -27,9 +28,9 @@ export function BrandMark({ className, dark = false }: { className?: string; dar
 
 export function Brand({ className, dark = false, to = '/' }: { className?: string; dark?: boolean; to?: string }) {
   return (
-    <Link to={to} className={cn('inline-flex items-center gap-2.5', className)} aria-label="Noria — accueil">
+    <Link to={to} className={cn('inline-flex items-center gap-3', className)} aria-label="Noria — accueil">
       <BrandMark dark={dark} />
-      <span className={cn('text-[15px] font-semibold tracking-[-0.02em]', dark ? 'text-white' : 'text-ink')}>
+      <span className={cn('text-[18px] font-semibold tracking-[-0.03em]', dark ? 'text-white' : 'text-ink')}>
         Noria
       </span>
     </Link>
