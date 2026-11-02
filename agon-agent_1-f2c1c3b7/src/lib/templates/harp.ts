@@ -39,6 +39,9 @@ export const harpTemplate: TemplateDef = {
           'Entrée et sortie des mariés',
           'Déplacement inclus dans 50 km',
         ],
+        audioSamples: [
+          { id: 'harpe-ceremonie', title: 'Harpe — cérémonie', src: '/audio/harpe-ceremonie.wav', duration: '0:06' },
+        ],
       },
       {
         id: 'f2',
@@ -52,6 +55,9 @@ export const harpTemplate: TemplateDef = {
           'Transition cérémonie puis dîner',
           'Programme musical personnalisé',
           'Accord préalable par visio',
+        ],
+        audioSamples: [
+          { id: 'harpe-diner', title: 'Harpe — dîner', src: '/audio/harpe-ceremonie.wav', duration: '0:06' },
         ],
         highlight: true,
       },
@@ -67,6 +73,9 @@ export const harpTemplate: TemplateDef = {
           'Accompagnement des entrées',
           'Création d’une marche nuptiale',
           'Captation audio incluse',
+        ],
+        audioSamples: [
+          { id: 'harpe-ensemble', title: 'Harpe & cordes', src: '/audio/harpe-ceremonie.wav', duration: '0:06' },
         ],
       },
     ],

@@ -18,6 +18,7 @@ import { Badge, Button, Card, EmptyState, Skeleton, Stars } from '../components/
 import { Brand } from '../components/Brand'
 import { getProviderBySlug, subscribeData } from '../lib/store'
 import { DemoNotice } from '../components/DemoNotice'
+import { AudioSamplePlayer } from '../components/AudioSamplePlayer'
 import type { ProviderInstance } from '../lib/types'
 import { money, optionUnitLabel } from '../lib/format'
 import { providerGradient, providerTheme } from '../lib/theme'
@@ -199,17 +200,17 @@ export default function ProviderPublic() {
                   f.highlight && 'ring-1 ring-ink/10',
                 )}
               >
-                {f.highlight && (
-                  <span className="absolute right-4 top-4 rounded-full bg-ink px-3 py-1 text-[11px] font-medium text-white">
-                    Populaire
-                  </span>
-                )}
                 <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
+                  <div className="min-w-0 pt-0.5">
                     <h3 className="text-[21px] font-medium tracking-[-0.035em] leading-tight text-ink">{f.name}</h3>
                     <p className="text-[13px] text-ink/50">{f.tagline}</p>
                   </div>
                   <div className="shrink-0 text-right">
+                    {f.highlight && (
+                      <span className="mb-2 inline-flex rounded-full bg-ink px-3 py-1 text-[10.5px] font-medium text-white">
+                        Populaire
+                      </span>
+                    )}
                     <p className="text-[24px] font-medium tracking-[-0.04em] leading-none text-ink">{money(f.price)}</p>
                     <p className="mt-1 inline-flex items-center gap-1 text-[11.5px] text-ink/45">
                       <Clock className="h-3 w-3" /> {f.duration}
@@ -225,6 +226,7 @@ export default function ProviderPublic() {
                     </li>
                   ))}
                 </ul>
+                {f.audioSamples && <AudioSamplePlayer samples={f.audioSamples} />}
                 <Button
                   className="mt-5"
                   full

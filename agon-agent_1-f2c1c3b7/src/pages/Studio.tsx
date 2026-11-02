@@ -156,7 +156,7 @@ export default function Studio() {
     try {
       const parsed = JSON.parse(await file.text()) as { kind?: string; version?: number; provider?: Omit<ProviderInstance, 'id' | 'slug' | 'createdAt' | 'accessCode'> }
       if (parsed.kind !== 'cadence-instance-config' || parsed.version !== 1 || !parsed.provider) {
-        throw new Error('Fichier de configuration Cadence invalide.')
+        throw new Error('Fichier de configuration Noria invalide.')
       }
       const payload = parsed.provider
       const baseSlug = slugify(payload.displayName) || 'instance'
@@ -1089,7 +1089,7 @@ function InstanceEditor({
         {tab === 'apparence' && (
           <div className="space-y-4">
             <p className="text-[13px] leading-relaxed text-ink/55">
-              L’interface reste dans le thème Cadence noir et blanc ; ces teintes personnalisent uniquement les détails décoratifs de l’instance.
+              L’interface reste dans le thème Noria noir et blanc ; ces teintes personnalisent uniquement les détails décoratifs de l’instance.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {(['brand', 'accent', 'paper'] as const).map((key) => (

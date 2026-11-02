@@ -1,5 +1,6 @@
 import type { Booking, BookingLine, Option, ProviderInstance, Slot, TimelineEntry } from './types'
 import { buildSeedBookings, buildSeedInstances } from './seed'
+import { getTemplate } from './templates'
 import { buildLine, computeTotals, derivedOptionQty, roundMoney } from './pricing'
 import { assertDateAvailable, isFutureDate, unavailableDates } from './availability'
 import { randomCode, slugify, uid } from './utils'
@@ -127,8 +128,13 @@ function writeIndex(ids: string[]): void {
 }
 
 function normalizeProvider(raw: ProviderInstance): ProviderInstance {
+  const template = getTemplate(raw.templateId)
   return {
     ...raw,
+    formulas: raw.formulas.map((formula) => {
+      const defaults = template?.payload.formulas.find((item) => item.id === formula.id)
+      return { ...formula, audioSamples: formula.audioSamples ?? defaults?.audioSamples }
+    }),
     travelIncludedKm: Number.isFinite(raw.travelIncludedKm) ? raw.travelIncludedKm : raw.templateId === 'dj' || raw.templateId === 'booth' ? 40 : 50,
   }
 }

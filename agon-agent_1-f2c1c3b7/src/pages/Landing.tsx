@@ -52,40 +52,41 @@ export default function Landing() {
       {/* Navigation épurée, sans bordure, comme une page produit. */}
       <header className="absolute inset-x-0 top-0 z-40">
         <div className="mx-auto flex h-20 max-w-[1200px] items-center justify-between px-5 sm:px-8">
-          <Brand />
-          <nav className="hidden items-center gap-8 text-[13px] font-medium text-ink/55 md:flex">
-            <a href="#parcours" className="transition-colors hover:text-ink">Le parcours</a>
-            <a href="#prestataires" className="transition-colors hover:text-ink">Prestataires</a>
-            <a href="#backoffice" className="transition-colors hover:text-ink">Espace prestataire</a>
+          <Brand dark />
+          <nav className="hidden items-center gap-8 text-[13px] font-medium text-white/55 md:flex">
+            <a href="#parcours" className="transition-colors hover:text-white">Le parcours</a>
+            <a href="#prestataires" className="transition-colors hover:text-white">Prestataires</a>
+            <a href="#backoffice" className="transition-colors hover:text-white">Espace prestataire</a>
           </nav>
-          <a href="#prestataires" className="inline-flex h-9 items-center justify-center rounded-full bg-ink px-4 text-[13px] font-medium text-white transition-colors hover:bg-ink/85">
+          <a href="#prestataires" className="inline-flex h-9 items-center justify-center rounded-full bg-white px-4 text-[13px] font-medium text-ink transition-colors hover:bg-white/90">
             Voir la démo
           </a>
         </div>
       </header>
 
       {/* Hero centré, cartes flottantes sur les côtés. */}
-      <section className="paper-grain relative overflow-hidden">
-        <div className="relative mx-auto min-h-[860px] max-w-[1440px] px-5 pt-32 sm:min-h-[900px] sm:pt-36">
+      <section className="immersive-hero relative overflow-hidden">
+        <div className="immersive-ambience" aria-hidden><div className="ambient-orb ambient-orb-rose" /><div className="ambient-orb ambient-orb-cyan" /><div className="ambient-orb ambient-orb-peach" /></div>
+        <div className="relative z-10 mx-auto min-h-[860px] max-w-[1440px] px-5 pt-32 sm:min-h-[900px] sm:pt-36">
           <div className="relative z-10 mx-auto max-w-[680px] text-center fade-up">
-            <p className="eyebrow mb-5">Réservation pour prestataires de mariage</p>
+            <p className="eyebrow mb-5">Plateforme de réservation multi-métiers</p>
             <h1 className="display-hero">
-              Le grand jour.<br />Déjà réservé.
+              Votre métier.<br />Vos règles.<br />Votre lien.
             </h1>
-            <p className="lede mx-auto mt-7 max-w-[480px]">
-              Votre univers, vos formules, votre calendrier. Une réservation simple,
-              de la première note à l’acompte.
+            <p className="lede mx-auto mt-7 max-w-[500px]">
+              Formules, options et disponibilités pensées pour l’activité de chaque prestataire.
+              Une page publique et un espace indépendant par instance.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href="#prestataires" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-[14px] font-medium tracking-[-0.01em] text-white transition-colors hover:bg-ink/85">
+              <a href="#prestataires" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-[14px] font-medium tracking-[-0.01em] text-ink transition-colors hover:bg-white/90">
                 Découvrir la démo <ArrowRight className="h-4 w-4" />
               </a>
-              <Link to="/studio" className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-card px-6 text-[14px] font-medium tracking-[-0.01em] text-ink transition-colors hover:bg-ink/[0.03]">
+              <Link to="/studio" className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/[0.04] px-6 text-[14px] font-medium tracking-[-0.01em] text-white transition-colors hover:bg-white/10">
                 Créer mon instance
               </Link>
             </div>
-            <p className="mt-6 text-[12px] text-ink/40">
-              Démo interactive · 5 prestataires fictifs · aucun paiement réel
+            <p className="mt-6 text-[12px] text-white/40">
+              Démo événementielle · 5 prestataires fictifs · aucun paiement réel
             </p>
           </div>
 
@@ -104,9 +105,10 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      <div className="pixel-divider" aria-hidden />
 
-      {/* Section sombre : téléphone suspendu, façon keynote. */}
-      <section id="parcours" className="section-dark relative overflow-hidden">
+      {/* Aperçu produit sur fond clair : contraste après le hero immersif. */}
+      <section id="parcours" className="section-light relative overflow-hidden">
         <div className="mx-auto max-w-[1200px] px-5 pb-24 pt-0 sm:px-8 sm:pb-32">
           <div className="relative mx-auto flex justify-center">
             <div className="lanyard-strap !top-0 !h-[120px] !w-[26px]" style={{ '--strap': '#e88a76' } as React.CSSProperties} />
@@ -116,12 +118,12 @@ export default function Landing() {
             </div>
           </div>
           <div className="mx-auto mt-14 max-w-[560px] text-center">
-            <h2 className="display-section text-white">Une date.<br />Tout est clair.</h2>
+            <h2 className="display-section">Une date.<br />Tout est clair.</h2>
             <p className="lede mx-auto mt-5 max-w-[440px]">
               Le client choisit sa formule, propose une date et suit la confirmation.
               Le prestataire garde la main, sans les allers-retours par message.
             </p>
-            <Link to={hero ? `/p/${hero.slug}/reserver` : '/p/lucas-ferrand/reserver'} className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white px-6 text-[14px] font-medium tracking-[-0.01em] text-black transition-colors hover:bg-white/90">
+            <Link to={hero ? `/p/${hero.slug}/reserver` : '/p/lucas-ferrand/reserver'} className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-[14px] font-medium tracking-[-0.01em] text-white transition-colors hover:bg-ink/85">
               Essayer le parcours <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -249,7 +251,7 @@ export default function Landing() {
           <div className="max-w-xs">
             <Brand />
             <p className="mt-4 text-[13px] leading-relaxed text-ink/50">
-              La réservation en ligne pour les prestataires de mariage. Un lien par prestataire.
+              La réservation en ligne pensée par métier. Un espace indépendant par prestataire.
             </p>
           </div>
           <div className="flex flex-wrap gap-x-10 gap-y-3 text-[13px] text-ink/60">
@@ -272,22 +274,23 @@ export default function Landing() {
 /* ------------------------------------------------------------------ cards */
 
 const FLOAT_POSITIONS = [
-  'left-[3%] top-[120px] rotate-[-10deg]',
-  'left-[15%] top-[440px] rotate-[7deg]',
-  'right-[4%] top-[100px] rotate-[9deg]',
-  'right-[16%] top-[460px] rotate-[-7deg]',
-  'left-[43%] top-[660px] rotate-[3deg] opacity-90 scale-90',
+  'left-[3%] top-[120px]',
+  'left-[15%] top-[440px]',
+  'right-[4%] top-[100px]',
+  'right-[16%] top-[460px]',
+  'left-[43%] top-[660px] opacity-90 scale-90',
 ]
+const FLOAT_TILTS = ['-10deg', '7deg', '9deg', '-7deg', '3deg']
 
 function FloatCard({ provider, index, className }: { provider: ProviderInstance; index: number; className?: string }) {
   return (
     <Link
       to={`/p/${provider.slug}`}
       className={cn('provider-float fade-up', FLOAT_POSITIONS[index], className)}
-      style={{ animationDelay: `${index * 90}ms` }}
+      style={{ '--card-tilt': FLOAT_TILTS[index], '--strap': strapColor(index), animationDelay: `${index * 90}ms` } as React.CSSProperties}
       aria-label={`Voir la page de ${provider.displayName}`}
     >
-      <span className="lanyard-strap" style={{ '--strap': strapColor(index) } as React.CSSProperties} />
+      <span className="lanyard-strap" />
       <div className={cn('provider-float-inner', cardGradient(index))}>
         <img src={provider.coverPhoto} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/10" />
@@ -306,9 +309,10 @@ function FloatCard({ provider, index, className }: { provider: ProviderInstance;
 }
 
 function MobileFloat({ provider, index }: { provider: ProviderInstance; index: number }) {
-  const pos = ['left-0 top-6 rotate-[-8deg] z-10', 'left-1/2 top-0 -translate-x-1/2 z-20', 'right-0 top-8 rotate-[8deg] z-10'][index]
+  const pos = ['left-0 top-6 z-10', 'left-1/2 top-0 -translate-x-1/2 z-20', 'right-0 top-8 z-10'][index]
   return (
-    <Link to={`/p/${provider.slug}`} className={cn('absolute w-[136px]', pos)} aria-label={`Voir ${provider.displayName}`}>
+    <Link to={`/p/${provider.slug}`} className={cn('mobile-provider-card absolute w-[136px]', pos)} style={{ '--card-tilt': ['-8deg', '0deg', '8deg'][index], '--strap': strapColor(index) } as React.CSSProperties} aria-label={`Voir ${provider.displayName}`}>
+      <span className="lanyard-strap carousel-strap" />
       <div className={cn('relative overflow-hidden rounded-[18px] float-shadow aspect-[3/4]', cardGradient(index))}>
         <img src={provider.coverPhoto} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
         <span className="lanyard-slot !top-2 !w-8 !h-1" />
@@ -395,7 +399,8 @@ function ProviderCarousel({ providers }: { providers: ProviderInstance[] }) {
     <div className="mt-6">
       <div ref={trackRef} className="carousel-track" onScroll={onScroll}>
         {providers.map((p, i) => (
-          <article key={p.id} className="carousel-card">
+          <article key={p.id} className="carousel-card" style={{ '--card-tilt': '0deg' } as React.CSSProperties}>
+            <span className="lanyard-strap carousel-strap" style={{ '--strap': strapColor(i) } as React.CSSProperties} />
             <div className={cn('relative overflow-hidden rounded-[26px] float-shadow aspect-[3/4.15]', cardGradient(i))}>
               <Link to={`/p/${p.slug}`} className="absolute inset-0" aria-label={`Page publique de ${p.displayName}`}>
                 <img src={p.coverPhoto} alt={p.displayName} className="absolute inset-0 h-full w-full object-cover opacity-90 transition-transform duration-500 hover:scale-[1.03]" />

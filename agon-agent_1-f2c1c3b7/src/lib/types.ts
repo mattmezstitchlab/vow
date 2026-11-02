@@ -1,5 +1,12 @@
 export type OptionUnit = 'forfait' | 'heure' | 'personne' | 'km'
 
+export interface AudioSample {
+  id: string
+  title: string
+  src: string
+  duration: string
+}
+
 export interface Formula {
   id: string
   name: string
@@ -9,6 +16,8 @@ export interface Formula {
   description: string
   includes: string[]
   highlight?: boolean
+  /** Extraits de démonstration que le couple peut écouter avant de choisir. */
+  audioSamples?: AudioSample[]
 }
 
 export interface Option {

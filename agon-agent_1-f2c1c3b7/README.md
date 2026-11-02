@@ -1,8 +1,8 @@
-# Cadence — démo de réservation pour prestataires de mariage
+# Noria — réservation multi-métiers pour prestataires de mariage
 
 Application web **mobile-first** de démonstration : un lien public par prestataire, des formules,
 des options, une date proposée, une confirmation prestataire et un acompte **simulé**.
-Le design s’inspire d’un langage visuel produit contemporain : typographie sans sérif ample, palette noir/blanc/gris, boutons pilule, cartes flottantes et halos pastel. Les informations et parcours Cadence restent propres à l’application.
+Noria utilise un langage visuel produit contemporain : typographie sans sérif ample, hero immersif, halos colorés, cartes-photo suspendues qui oscillent au survol et boutons pilule. Les cartes de formules proposent des extraits audio synthétiques de démonstration ; ils ne remplacent pas les enregistrements réels d’un prestataire.
 
 > Démo prête à présenter à cinq prestataires. Aucun paiement réel, aucun e-mail envoyé,
 > aucune donnée bancaire collectée. Les données restent dans le navigateur.
@@ -55,6 +55,7 @@ Build de production : `npm run build` puis `npm run preview`.
 - Demande client sans paiement, confirmation prestataire, contre-proposition de date acceptée par le client.
 - Devis ajustable avant confirmation, verrouillé ensuite ; paiement au montant courant uniquement.
 - Paiement simulé idempotent, référence de démo, journal par instance.
+- Extraits audio de démonstration sélectionnables pour les formules musicales (sons synthétiques, à remplacer par les enregistrements des prestataires).
 - Back-office mobile avec recherche, filtres, détail en feuille modale, note interne, historique.
 - Studio : modèle « Saxophone de mariage » réutilisable, photos/textes/tarifs modifiables,
   export/import de configuration sans réservations ni code d’accès.
@@ -63,7 +64,7 @@ Build de production : `npm run build` puis `npm run preview`.
 ## Architecture et cloisonnement
 
 - React 19 + TypeScript + Vite + Tailwind CSS 4, Framer Motion, Lucide.
-- Persistance locale : une clé `cadence.v1.data.<providerId>` par instance.
+- Persistance locale : une clé historique `cadence.v1.data.<providerId>` par instance, conservée afin de ne pas perdre les données du navigateur lors du rebranding Noria.
 - Les prix sont recalculés depuis le catalogue prestataire ; le client ne fournit pas de montant.
 - Les écritures vérifient le `providerId` ; un code de réservation n’est pas lisible depuis une autre instance.
 - Pas de panier commun, pas de partage d’acompte entre prestataires.
@@ -85,5 +86,5 @@ npm run build     # TypeScript + build Vite
 npm run test:e2e  # Playwright (nécessite Chromium : npx playwright install chromium)
 ```
 
-Les tests E2E couvrent le parcours mobile complet demande → confirmation → acompte simulé,
-ainsi que le refus d’accès croisé entre prestataires.
+Les tests E2E couvrent le lecteur audio, le parcours mobile complet demande → confirmation →
+acompte simulé, ainsi que le refus d’accès croisé entre prestataires.

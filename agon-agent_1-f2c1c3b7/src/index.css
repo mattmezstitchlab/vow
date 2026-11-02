@@ -111,6 +111,69 @@
       #f7f7f8;
   }
 
+  /* Hero immersif : ciel nocturne, halos lumineux et texture discrète. */
+  .immersive-hero {
+    isolation: isolate;
+    background:
+      radial-gradient(ellipse 48% 52% at 14% 42%, rgb(66 84 204 / .24), transparent 72%),
+      radial-gradient(ellipse 40% 44% at 86% 24%, rgb(215 65 153 / .18), transparent 72%),
+      radial-gradient(ellipse 55% 46% at 52% 108%, rgb(39 124 145 / .18), transparent 72%),
+      #07070a;
+    color: #fff;
+  }
+  .immersive-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: .56;
+    background-image:
+      radial-gradient(1px 1px at 8% 22%, #fff 50%, transparent 52%),
+      radial-gradient(1px 1px at 22% 74%, rgb(255 255 255 / .7) 50%, transparent 52%),
+      radial-gradient(1.5px 1.5px at 36% 15%, rgb(255 255 255 / .8) 50%, transparent 52%),
+      radial-gradient(1px 1px at 56% 46%, rgb(255 255 255 / .65) 50%, transparent 52%),
+      radial-gradient(1.5px 1.5px at 72% 12%, rgb(255 255 255 / .75) 50%, transparent 52%),
+      radial-gradient(1px 1px at 91% 63%, rgb(255 255 255 / .65) 50%, transparent 52%);
+  }
+  .immersive-hero .eyebrow { color: rgb(255 255 255 / .62); }
+  .immersive-hero .lede { color: rgb(255 255 255 / .64); }
+  .immersive-ambience {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .ambient-orb {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(52px);
+    opacity: .38;
+    animation: ambient-drift 18s ease-in-out infinite alternate;
+  }
+  .ambient-orb-rose { width: 340px; height: 340px; left: -120px; top: 20%; background: #9c47c9; }
+  .ambient-orb-cyan { width: 420px; height: 420px; right: -140px; top: 8%; background: #177fa0; animation-delay: -7s; }
+  .ambient-orb-peach { width: 290px; height: 290px; right: 24%; bottom: -200px; background: #dc5a99; animation-delay: -12s; }
+  @keyframes ambient-drift {
+    from { transform: translate3d(0, -10px, 0) scale(.95); }
+    to { transform: translate3d(28px, 22px, 0) scale(1.12); }
+  }
+
+  .pixel-divider {
+    position: relative;
+    z-index: 2;
+    height: 18px;
+    margin-top: -1px;
+    background:
+      linear-gradient(180deg, #050506 0 7px, transparent 7px),
+      repeating-linear-gradient(90deg, #050506 0 10px, transparent 10px 16px);
+    background-size: 100% 100%, 100% 13px;
+    background-position: 0 0, 0 5px;
+    background-repeat: no-repeat;
+    opacity: .92;
+  }
+
   .soft-shadow { box-shadow: 0 1px 2px rgb(17 17 19 / 0.03), 0 12px 40px -18px rgb(17 17 19 / 0.12); }
   .float-shadow { box-shadow: 0 2px 6px rgb(17 17 19 / 0.05), 0 30px 60px -24px rgb(17 17 19 / 0.28); }
 
@@ -210,10 +273,18 @@
     width: 176px;
     border-radius: 22px;
     overflow: visible;
-    transition: transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s;
-    will-change: transform;
+    rotate: var(--card-tilt, 0deg);
+    transform-origin: 50% -58px;
+    transition: translate .4s cubic-bezier(.2,.8,.2,1), scale .4s, filter .4s;
+    will-change: rotate, translate;
   }
-  .provider-float:hover { transform: translateY(-8px) rotate(0deg) scale(1.03) !important; z-index: 20; }
+  .provider-float:hover,
+  .provider-float:focus-visible {
+    animation: badge-swing 1.15s cubic-bezier(.25,.75,.35,1) both;
+    translate: 0 -7px;
+    scale: 1.03;
+    z-index: 20;
+  }
   .provider-float-inner {
     position: relative;
     border-radius: 22px;
@@ -255,11 +326,42 @@
   }
   .carousel-track::-webkit-scrollbar { display: none; }
   .carousel-card {
+    position: relative;
     flex: 0 0 min(310px, 78vw);
     scroll-snap-align: center;
-    transition: transform .4s cubic-bezier(.2,.8,.2,1);
+    rotate: var(--card-tilt, 0deg);
+    transform-origin: 50% -22px;
+    transition: translate .4s cubic-bezier(.2,.8,.2,1), scale .4s;
   }
-  .carousel-card:hover { transform: translateY(-8px); }
+  .carousel-card:hover,
+  .carousel-card:focus-within {
+    animation: badge-swing .95s cubic-bezier(.25,.75,.35,1) both;
+    translate: 0 -6px;
+    z-index: 10;
+  }
+  .mobile-provider-card {
+    rotate: var(--card-tilt, 0deg);
+    transform-origin: 50% -20px;
+    transition: translate .35s, scale .35s;
+  }
+  .carousel-strap {
+    top: -24px;
+    width: 18px;
+    height: 58px;
+  }
+  .audio-wave-bar { transform-origin: center; animation: audio-wave .55s ease-in-out infinite alternate; }
+
+  @keyframes badge-swing {
+    0% { rotate: var(--card-tilt, 0deg); }
+    22% { rotate: calc(var(--card-tilt, 0deg) + 7deg); }
+    48% { rotate: calc(var(--card-tilt, 0deg) - 6deg); }
+    73% { rotate: calc(var(--card-tilt, 0deg) + 3deg); }
+    100% { rotate: var(--card-tilt, 0deg); }
+  }
+  @keyframes audio-wave {
+    from { transform: scaleY(.5); }
+    to { transform: scaleY(1.2); }
+  }
 
   .sway { animation: sway 7s ease-in-out infinite; transform-origin: 50% -60px; }
   @keyframes sway {

@@ -1,6 +1,6 @@
-# Vow — Cadence
+# Vow — Noria
 
-Démo mobile-first de réservation pour prestataires de mariage, avec interface noir/blanc/gris, typographie sans sérif et cartes flottantes à halos pastel.
+Démo mobile-first de réservation multi-métiers, avec instances indépendantes par prestataire, interface immersive et cartes flottantes.
 
 L’application se trouve dans [`agon-agent_1-f2c1c3b7`](./agon-agent_1-f2c1c3b7).
 

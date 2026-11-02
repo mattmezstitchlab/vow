@@ -1,6 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="15" fill="#12271f"/>
-  <path d="M42 13v27.5" stroke="#b9863f" stroke-width="5" stroke-linecap="round"/>
-  <path d="M42 13c6.2 2.2 9.8 5.8 10.8 11-4.2-3.2-7.3-4.3-10.8-3.8z" fill="#b9863f"/>
-  <ellipse cx="34" cy="43.5" rx="8.4" ry="6.8" fill="#b9863f" transform="rotate(-18 34 43.5)"/>
+  <defs>
+    <linearGradient id="noria" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8b5cf6"/>
+      <stop offset=".52" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#fb7185"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="#09090b"/>
+  <circle cx="32" cy="32" r="20" fill="none" stroke="url(#noria)" stroke-width="2.5" stroke-dasharray="14 8" stroke-linecap="round"/>
+  <path d="M32 11v10M14 42l9-5M50 42l-9-5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="32" cy="10" r="5" fill="#a78bfa"/>
+  <circle cx="12" cy="44" r="5" fill="#22d3ee"/>
+  <circle cx="52" cy="44" r="5" fill="#fb7185"/>
+  <circle cx="32" cy="32" r="6" fill="#fff"/>
 </svg>

@@ -42,6 +42,9 @@ export const saxTemplate: TemplateDef = {
           'Sortie des mariés',
           'Déplacement inclus dans 50 km',
         ],
+        audioSamples: [
+          { id: 'sax-ceremonie', title: 'Entrée des mariés', src: '/audio/sax-ceremonie.wav', duration: '0:05' },
+        ],
       },
       {
         id: 'f2',
@@ -56,6 +59,10 @@ export const saxTemplate: TemplateDef = {
           '2 h de jazz swing au cocktail',
           'Répertoire personnalisable',
           'Photo de mise en place offerte',
+        ],
+        audioSamples: [
+          { id: 'sax-doux', title: 'Cérémonie douce', src: '/audio/sax-ceremonie.wav', duration: '0:05' },
+          { id: 'sax-swing', title: 'Cocktail swing', src: '/audio/sax-swing.wav', duration: '0:06' },
         ],
         highlight: true,
       },
@@ -73,6 +80,9 @@ export const saxTemplate: TemplateDef = {
           'Deux sets avec changement de style',
           'Coordination avec le traiteur et le photographe',
           'Astreinte le jour J incluse',
+        ],
+        audioSamples: [
+          { id: 'sax-bal', title: 'Bal & ouverture', src: '/audio/sax-bal.wav', duration: '0:05' },
         ],
       },
     ],

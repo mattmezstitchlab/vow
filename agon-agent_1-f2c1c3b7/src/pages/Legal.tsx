@@ -17,7 +17,7 @@ export default function Legal() {
       <main className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
         <h1 className="display-section text-ink">Informations légales & confidentialité</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-ink/60">
-          Cadence est ici une démonstration de produit, pas un service de réservation ou de paiement en production.
+          Noria est ici une démonstration de produit, pas un service de réservation ou de paiement en production.
         </p>
         <DemoNotice className="mt-5">
           Aucun paiement réel, aucun e-mail envoyé, aucune donnée bancaire collectée. Les données de la démo
@@ -60,7 +60,7 @@ export default function Legal() {
             Règle produit : pas de panier commun ni de partage d’acompte entre prestataires. Chaque
             règlement est rattaché à une seule instance. En production, le paiement devra être encaissé
             directement par le prestataire concerné (par exemple via son propre compte de paiement),
-            sans que Cadence ne détienne ou ne redistribue les fonds.
+            sans que Noria ne détienne ou ne redistribue les fonds.
           </p>
         </section>
 

@@ -39,6 +39,9 @@ export const djTemplate: TemplateDef = {
           'Lumières d’ambiance',
           'Playlist validée ensemble',
         ],
+        audioSamples: [
+          { id: 'dj-cocktail', title: 'Cocktail chill', src: '/audio/dj-chill.wav', duration: '0:08' },
+        ],
       },
       {
         id: 'f2',
@@ -53,6 +56,10 @@ export const djTemplate: TemplateDef = {
           'Sonorisation + lumières',
           'Playlist personnalisée',
           'Départ à 2 h',
+        ],
+        audioSamples: [
+          { id: 'dj-groove', title: 'Groove festif', src: '/audio/dj-groove.wav', duration: '0:08' },
+          { id: 'dj-open-format', title: 'Open format', src: '/audio/dj-open-format.wav', duration: '0:08' },
         ],
         highlight: true,
       },
@@ -69,6 +76,9 @@ export const djTemplate: TemplateDef = {
           'Sonorisation complète',
           'Animation des jeux de mariage',
           'Photo booth numérique',
+        ],
+        audioSamples: [
+          { id: 'dj-dance', title: 'Première danse', src: '/audio/dj-dance.wav', duration: '0:08' },
         ],
       },
     ],
