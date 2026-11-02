@@ -114,6 +114,7 @@ export function optionUnitLabel(unit: string, qty: number): string {
 
 export const STATUS_LABEL: Record<string, string> = {
   proposee: 'Date proposée',
+  date_a_accepter: 'Date à accepter',
   confirmee: 'Date confirmée',
   acompte_paye: 'Acompte encaissé',
   refusee: 'Refusée',

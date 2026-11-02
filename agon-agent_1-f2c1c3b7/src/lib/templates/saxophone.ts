@@ -52,7 +52,7 @@ export const saxTemplate: TemplateDef = {
         description:
           'La cérémonie complète, puis un set de jazz swing pendant le cocktail et l’apéritif.',
         includes: [
-          'Tout le formule Cérémonie',
+          'Toute la formule Cérémonie',
           '2 h de jazz swing au cocktail',
           'Répertoire personnalisable',
           'Photo de mise en place offerte',
@@ -133,6 +133,7 @@ export const saxTemplate: TemplateDef = {
       },
     ],
     depositPercent: 30,
+    travelIncludedKm: 50,
     palette: { brand: '#12271F', accent: '#B9863F', paper: '#FBF7F1' },
     blockedDates: [],
     contact: {
@@ -160,7 +161,7 @@ export const saxTemplate: TemplateDef = {
         author: 'Camille & Thomas',
         date: '2025-09-14',
         rating: 5,
-        text: "Lucas a été exceptionnel. La cérémonie a donné des frissons à toute l'assemblée et le bal a tenu tout le monde jusqu'à 2 h du matin.",
+        text: "Le saxophoniste a été exceptionnel. La cérémonie a donné des frissons à toute l'assemblée et le bal a tenu tout le monde jusqu'à 2 h du matin.",
       },
       {
         author: 'Sophie D.',

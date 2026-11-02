@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowUpRight,
@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Image as ImageIcon,
   KeyRound,
-  LayoutTemplate,
   Link2,
   Loader2,
   Lock,
@@ -20,9 +19,9 @@ import {
   Trash2,
   Upload,
   Wallet,
-  X,
 } from 'lucide-react'
 import { Badge, Button, Card, Field, Input, Select, Sheet, Textarea, useToast } from '../components/ui'
+import { DemoNotice } from '../components/DemoNotice'
 import { IMAGE_LIBRARY } from '../lib/images'
 import { TEMPLATES } from '../lib/templates'
 import {
@@ -32,10 +31,11 @@ import {
   listProviders,
   resetDemo,
   saveProvider,
+  subscribeData,
 } from '../lib/store'
 import type { Formula, Option, ProviderInstance } from '../lib/types'
 import { money } from '../lib/format'
-import { cn, compressImage, slugify, uid } from '../lib/utils'
+import { cn, compressImage, downloadJson, slugify, uid } from '../lib/utils'
 
 interface LedgerRow {
   provider: ProviderInstance
@@ -51,6 +51,9 @@ export default function Studio() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<ProviderInstance | null>(null)
   const [cloning, setCloning] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<ProviderInstance | null>(null)
+  const [resetOpen, setResetOpen] = useState(false)
+  const importRef = useRef<HTMLInputElement>(null)
 
   const refresh = async () => {
     const list = await listProviders()
@@ -74,7 +77,31 @@ export default function Studio() {
   }
 
   useEffect(() => {
-    void refresh()
+    let active = true
+    const load = async () => {
+      const list = await listProviders()
+      if (!active) return
+      setProviders(list)
+      const rows: LedgerRow[] = []
+      for (const p of list) {
+        const bookings = await listBookings(p.id)
+        rows.push({
+          provider: p,
+          bookings: bookings.length,
+          collected: bookings.filter((b) => b.deposit.status === 'paye').reduce((sum, b) => sum + b.deposit.amount, 0),
+          pipeline: bookings.filter((b) => b.status === 'confirmee' || b.status === 'acompte_paye').reduce((sum, b) => sum + b.pricing.total, 0),
+        })
+      }
+      if (!active) return
+      setLedger(rows)
+      setLoading(false)
+    }
+    void load()
+    const unsubscribe = subscribeData(() => void load())
+    return () => {
+      active = false
+      unsubscribe()
+    }
   }, [])
 
   const cloneTemplate = async (templateId: string, name: string, slug: string) => {
@@ -103,6 +130,7 @@ export default function Studio() {
   const remove = async (p: ProviderInstance) => {
     try {
       await deleteInstance(p.id)
+      setConfirmDelete(null)
       await refresh()
       toast.push('Instance supprimée.', 'info')
     } catch (err) {
@@ -112,8 +140,41 @@ export default function Studio() {
 
   const doReset = async () => {
     resetDemo()
+    setResetOpen(false)
     await refresh()
     toast.push('Démonstration réinitialisée.', 'success')
+  }
+
+  const exportConfig = (p: ProviderInstance) => {
+    const { id: _id, slug: _slug, createdAt: _createdAt, accessCode: _accessCode, ...payload } = p
+    void _id; void _slug; void _createdAt; void _accessCode
+    downloadJson(`cadence-config-${p.slug}.json`, { kind: 'cadence-instance-config', version: 1, provider: payload })
+    toast.push('Configuration exportée (sans réservations ni code d’accès).', 'success')
+  }
+
+  const importConfig = async (file: File) => {
+    try {
+      const parsed = JSON.parse(await file.text()) as { kind?: string; version?: number; provider?: Omit<ProviderInstance, 'id' | 'slug' | 'createdAt' | 'accessCode'> }
+      if (parsed.kind !== 'cadence-instance-config' || parsed.version !== 1 || !parsed.provider) {
+        throw new Error('Fichier de configuration Cadence invalide.')
+      }
+      const payload = parsed.provider
+      const baseSlug = slugify(payload.displayName) || 'instance'
+      const instance: ProviderInstance = {
+        ...payload,
+        id: uid('prov'),
+        slug: `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`,
+        accessCode: `${baseSlug.slice(0, 4).toUpperCase() || 'INST'}-${Math.floor(1000 + Math.random() * 8999)}`,
+        createdAt: Date.now(),
+        travelIncludedKm: payload.travelIncludedKm ?? 50,
+      }
+      await createInstance(instance)
+      await refresh()
+      setEditing(instance)
+      toast.push('Configuration importée dans une nouvelle instance.', 'success')
+    } catch (err) {
+      toast.push(err instanceof Error ? err.message : 'Import impossible.', 'error')
+    }
   }
 
   if (loading) {
@@ -138,9 +199,23 @@ export default function Studio() {
             </Badge>
           </Link>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={doReset} icon={<RotateCcw className="h-3.5 w-3.5" />}>
+            <Button variant="ghost" size="sm" onClick={() => setResetOpen(true)} icon={<RotateCcw className="h-3.5 w-3.5" />}>
               <span className="hidden sm:inline">Réinitialiser</span>
             </Button>
+            <Button variant="outline" size="sm" onClick={() => importRef.current?.click()} icon={<Upload className="h-3.5 w-3.5" />}>
+              <span className="hidden sm:inline">Importer</span>
+            </Button>
+            <input
+              ref={importRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) void importConfig(file)
+                e.target.value = ''
+              }}
+            />
             <Link to="/">
               <Button variant="outline" size="sm">
                 Voir la démo
@@ -165,6 +240,11 @@ export default function Studio() {
             propre back-office et son propre journal d’acomptes.
           </p>
         </div>
+
+        <DemoNotice className="mt-6">
+          Studio de démonstration : les instances vivent dans ce navigateur. Exportez une configuration
+          pour la réutiliser ailleurs ; aucun paiement réel n’est connecté.
+        </DemoNotice>
 
         {/* ------------------------------------------------- modèles */}
         <section className="mt-10">
@@ -281,8 +361,7 @@ export default function Studio() {
                   <ShieldCheck className="h-5 w-5 text-accent" /> Cloisonnement des acomptes
                 </h2>
                 <p className="mt-1 text-[13px] text-ink/55">
-                  Chaque instance écrit dans sa propre clé de stockage. Aucun montant ne peut
-                  transiter d’une instance à l’autre.
+                  Vue d’ensemble de la démo uniquement. Chaque back-office de prestataire ne montre que ses propres dossiers ; aucun montant ne transite d’une instance à l’autre.
                 </p>
               </div>
               <Badge tone="success">
@@ -353,7 +432,7 @@ export default function Studio() {
               size="sm"
               variant="ghost"
               className="text-red-600/80"
-              onClick={() => remove(p)}
+              onClick={() => setConfirmDelete(p)}
               icon={<Trash2 className="h-3.5 w-3.5" />}
             >
               Supprimer {p.displayName}
@@ -364,6 +443,7 @@ export default function Studio() {
 
       {/* ------------------------------------------------- clone sheet */}
       <CloneSheet
+        key={cloning ?? 'none'}
         templateId={cloning}
         onClose={() => setCloning(null)}
         onConfirm={cloneTemplate}
@@ -378,8 +458,41 @@ export default function Studio() {
             await refresh()
             setEditing(p)
           }}
+          onExport={exportConfig}
         />
       )}
+
+      <Sheet
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        title={<p className="font-display text-[22px] text-ink">Supprimer l’instance ?</p>}
+        footer={
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={() => setConfirmDelete(null)}>Conserver</Button>
+            <Button variant="danger" onClick={() => confirmDelete && void remove(confirmDelete)}>Supprimer</Button>
+          </div>
+        }
+      >
+        <p className="text-[14px] leading-relaxed text-ink/65">
+          {confirmDelete?.displayName} et toutes ses réservations de démo seront supprimés de ce navigateur. Cette action est irréversible.
+        </p>
+      </Sheet>
+
+      <Sheet
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        title={<p className="font-display text-[22px] text-ink">Réinitialiser la démo ?</p>}
+        footer={
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={() => setResetOpen(false)}>Annuler</Button>
+            <Button variant="danger" onClick={() => void doReset()}>Réinitialiser</Button>
+          </div>
+        }
+      >
+        <p className="text-[14px] leading-relaxed text-ink/65">
+          Toutes les instances personnalisées et réservations seront remplacées par les cinq exemples d’origine.
+        </p>
+      </Sheet>
     </div>
   )
 }
@@ -396,15 +509,8 @@ function CloneSheet({
   onConfirm: (templateId: string, name: string, slug: string) => void
 }) {
   const template = TEMPLATES.find((t) => t.id === templateId)
-  const [name, setName] = useState('')
+  const [name, setName] = useState(template && template.name !== 'Saxophone de mariage' ? template.name : '')
   const [slug, setSlug] = useState('')
-
-  useEffect(() => {
-    if (template) {
-      setName(template.name === 'Saxophone de mariage' ? '' : template.name)
-      setSlug('')
-    }
-  }, [template])
 
   return (
     <Sheet
@@ -474,10 +580,12 @@ function InstanceEditor({
   instance,
   onClose,
   onSaved,
+  onExport,
 }: {
   instance: ProviderInstance
   onClose: () => void
   onSaved: (p: ProviderInstance) => void
+  onExport: (p: ProviderInstance) => void
 }) {
   const toast = useToast()
   const [draft, setDraft] = useState<ProviderInstance>(instance)
@@ -542,6 +650,9 @@ function InstanceEditor({
         <div className="flex gap-2">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Fermer
+          </Button>
+          <Button variant="outline" onClick={() => onExport(draft)} icon={<ExternalLink className="h-4 w-4" />}>
+            Exporter
           </Button>
           <Button onClick={save} loading={saving} className="flex-1" icon={<Check className="h-4 w-4" />}>
             Enregistrer
@@ -1005,14 +1116,24 @@ function InstanceEditor({
               ))}
             </div>
 
-            <Field label="Acompte (%)">
+            <Field label="Déplacement inclus (km)">
               <Input
                 type="number"
                 min={0}
+                max={500}
+                value={draft.travelIncludedKm}
+                onChange={(e) => set('travelIncludedKm', Math.min(500, Math.max(0, Number(e.target.value) || 0)))}
+              />
+            </Field>
+
+            <Field label="Acompte (%)">
+              <Input
+                type="number"
+                min={1}
                 max={100}
                 value={draft.depositPercent}
                 onChange={(e) =>
-                  set('depositPercent', Math.min(100, Math.max(0, Number(e.target.value) || 0)))
+                  set('depositPercent', Math.min(100, Math.max(1, Number(e.target.value) || 1)))
                 }
               />
             </Field>

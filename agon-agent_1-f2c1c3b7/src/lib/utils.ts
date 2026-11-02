@@ -18,10 +18,9 @@ export function slugify(input: string): string {
 
 export function randomCode(prefix: string): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let out = ''
-  for (let i = 0; i < 4; i += 1) {
-    out += chars[Math.floor(Math.random() * chars.length)]
-  }
+  const bytes = new Uint8Array(6)
+  crypto.getRandomValues(bytes)
+  const out = Array.from(bytes, (b) => chars[b % chars.length]).join('')
   return `${prefix.toUpperCase().slice(0, 3)}-${out}`
 }
 

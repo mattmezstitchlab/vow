@@ -25,6 +25,8 @@ export interface CalendarProps {
   blockedDates?: string[]
   minISO?: string
   maxMonthsAhead?: number
+  /** En mode gestion, permettre de cliquer une date bloquée pour la débloquer. */
+  allowBlocked?: boolean
 }
 
 export function Calendar({
@@ -33,6 +35,7 @@ export function Calendar({
   blockedDates = [],
   minISO = todayISO(),
   maxMonthsAhead = 12,
+  allowBlocked = false,
 }: CalendarProps) {
   const blocked = useMemo(() => new Set(blockedDates), [blockedDates])
   const initial = value ? fromISO(value) : fromISO(minISO)
@@ -116,12 +119,14 @@ export function Calendar({
           const isPast = cell.iso < minISO
           const isBlocked = blocked.has(cell.iso)
           const isSelected = value === cell.iso
-          const disabled = isPast || isBlocked
+          const disabled = isPast || (isBlocked && !allowBlocked)
           return (
             <button
               key={cell.iso}
               type="button"
               disabled={disabled}
+              aria-label={`${cell.day} ${MONTHS[cursor.getMonth()]} ${cursor.getFullYear()}${isBlocked ? ' — indisponible' : ''}`}
+              aria-pressed={isSelected}
               onClick={() => onChange(cell.iso)}
               className={cn(
                 'relative flex aspect-square items-center justify-center rounded-xl text-[13px] font-medium transition-all',

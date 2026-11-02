@@ -1,14 +1,17 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 import { ToastProvider } from './components/ui'
+import { StorageWarning } from './components/StorageWarning'
 import Landing from './pages/Landing'
-import ProviderPublic from './pages/ProviderPublic'
-import BookingWizard from './pages/BookingWizard'
-import Reservation from './pages/Reservation'
-import BackOffice from './pages/BackOffice'
-import Studio from './pages/Studio'
-import Legal from './pages/Legal'
-import NotFound from './pages/NotFound'
+
+const ProviderPublic = lazy(() => import('./pages/ProviderPublic'))
+const BookingWizard = lazy(() => import('./pages/BookingWizard'))
+const Reservation = lazy(() => import('./pages/Reservation'))
+const BackOffice = lazy(() => import('./pages/BackOffice'))
+const Studio = lazy(() => import('./pages/Studio'))
+const Legal = lazy(() => import('./pages/Legal'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -18,21 +21,32 @@ function ScrollToTop() {
   return null
 }
 
+function PageLoader() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-paper">
+      <Loader2 className="h-6 w-6 animate-spin text-ink/40" aria-label="Chargement" />
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
+        <StorageWarning />
         <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/p/:slug" element={<ProviderPublic />} />
-          <Route path="/p/:slug/reserver" element={<BookingWizard />} />
-          <Route path="/r/:slug/:code" element={<Reservation />} />
-          <Route path="/bo/:slug" element={<BackOffice />} />
-          <Route path="/studio" element={<Studio />} />
-          <Route path="/legal" element={<Legal />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/p/:slug" element={<ProviderPublic />} />
+            <Route path="/p/:slug/reserver" element={<BookingWizard />} />
+            <Route path="/r/:slug/:code" element={<Reservation />} />
+            <Route path="/bo/:slug" element={<BackOffice />} />
+            <Route path="/studio" element={<Studio />} />
+            <Route path="/legal" element={<Legal />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </ToastProvider>
     </BrowserRouter>
   )

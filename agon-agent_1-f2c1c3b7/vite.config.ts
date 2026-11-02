@@ -6,10 +6,12 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(async ({ mode }) => {
   const plugins = [react(), tailwindcss()];
   try {
-    // @ts-ignore
+    // @ts-expect-error — plugin optionnel injecté par l'environnement de preview
     const m = await import('./.vite-source-tags.js');
     plugins.push(m.sourceTags());
-  } catch {}
+  } catch {
+    // plugin absent : build standard
+  }
 
   const env = loadEnv(mode, process.cwd(), ['VITE_', 'NEXT_PUBLIC_']);
   const processEnvDefines: Record<string, string> = {};
@@ -18,6 +20,15 @@ export default defineConfig(async ({ mode }) => {
   }
 
   return {
+    server: {
+      host: '0.0.0.0',
+      port: 5173,
+      allowedHosts: ['.e2b.app', 'localhost', '127.0.0.1'],
+    },
+    preview: {
+      host: '0.0.0.0',
+      allowedHosts: ['.e2b.app', 'localhost', '127.0.0.1'],
+    },
     plugins,
     envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
     define: processEnvDefines,

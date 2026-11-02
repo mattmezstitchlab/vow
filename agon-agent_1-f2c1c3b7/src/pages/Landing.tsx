@@ -15,6 +15,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import { Badge, Button, Card, SectionTitle, Stars } from '../components/ui'
+import { DemoNotice } from '../components/DemoNotice'
 import { listProviders } from '../lib/store'
 import type { ProviderInstance } from '../lib/types'
 import { money } from '../lib/format'
@@ -94,7 +95,7 @@ export default function Landing() {
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
             <Badge tone="accent" className="mb-5">
-              <Sparkles className="h-3 w-3" /> Démo live · 5 prestataires préchargés
+              <Sparkles className="h-3 w-3" /> Démo interactive · 5 prestataires fictifs
             </Badge>
             <h1 className="font-display text-[44px] leading-[1.03] text-ink sm:text-[62px] lg:text-[70px]">
               Vos mariages se réservent
@@ -124,7 +125,7 @@ export default function Landing() {
               </div>
               <div>
                 <dt className="font-display text-2xl text-ink">30 %</dt>
-                <dd className="mt-1 text-[12px] text-ink/55">d’acompte encaissé</dd>
+                <dd className="mt-1 text-[12px] text-ink/55">d’acompte après confirmation</dd>
               </div>
               <div>
                 <dt className="font-display text-2xl text-ink">0 €</dt>
@@ -134,6 +135,12 @@ export default function Landing() {
           </div>
 
           <PhoneMock />
+        </div>
+        <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
+          <DemoNotice>
+            <strong className="font-semibold text-ink">Démo prête à présenter.</strong> Les cinq prestataires sont fictifs.
+            Les liens fonctionnent dans ce navigateur ; les paiements et e-mails sont simulés.
+          </DemoNotice>
         </div>
       </section>
 
@@ -168,7 +175,7 @@ export default function Landing() {
           <SectionTitle
             eyebrow="La démo"
             title="Un modèle, cinq prestataires"
-            description="Chaque prestataire a sa page publique, son back-office et son propre ledger d’acomptes. Rien ne se mélange."
+            description="Chaque prestataire a sa page publique, son back-office et son propre journal d’acomptes. Aucun panier commun, aucun partage de règlement."
           />
           <Link to="/studio">
             <Button variant="outline" size="sm">
@@ -242,11 +249,11 @@ export default function Landing() {
       <section id="backoffice" className="border-y border-line bg-brand text-white">
         <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:items-center">
           <div>
-            <SectionTitle
-              eyebrow="Espace prestataire"
-              title="Un back-office simple, à la taille du métier"
-              description="Pas de logiciel à apprendre. On confirme une date, on règle une option, on suit les acomptes."
-            />
+            <div className="max-w-2xl">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Espace prestataire</p>
+              <h2 className="font-display text-[30px] leading-[1.1] text-white sm:text-[38px]">Un back-office simple, à la taille du métier</h2>
+              <p className="mt-3 text-[15px] leading-relaxed text-white/70">Pas de logiciel à apprendre. On confirme une date, on règle une option, on suit les acomptes.</p>
+            </div>
             <ul className="mt-7 space-y-3.5">
               {[
                 'Demandes reçues, classées par date',
@@ -280,7 +287,7 @@ export default function Landing() {
             <SectionTitle
               eyebrow="Cloisonnement"
               title="Un acompte n’appartient qu’à son prestataire"
-              description="Chaque instance possède son propre espace de stockage, son propre journal et sa propre session. Un règlement encaissé par Lucas Ferrand n’est ni lisible, ni déplaçable, ni encaissable chez un autre prestataire."
+              description="Chaque instance possède son propre espace de stockage, son propre journal et sa propre session. Un règlement encaissé par Lucas Ferrand n’est ni visible, ni déplaçable, ni encaissable depuis le back-office d’un autre prestataire."
             />
             <div className="mt-6 flex flex-wrap gap-2">
               <Badge tone="brand">
@@ -518,8 +525,8 @@ function IsolationDiagram() {
           ))}
         </div>
         <p className="mt-4 text-[11.5px] leading-relaxed text-ink/45">
-          Aucune de ces lignes n’est visible depuis l’instance d’un autre prestataire.
-          La clé de stockage est propre à chaque instance.
+          Dans le back-office d’un prestataire, seules ses propres lignes apparaissent.
+          Chaque instance possède sa clé de stockage ; le Studio de démo offre une vue d’ensemble séparée.
         </p>
       </Card>
     </div>

@@ -1,23 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  AlertCircle,
-  ArrowLeft,
   ArrowUpRight,
   CalendarDays,
   CalendarOff,
   Check,
   CheckCircle2,
-  ChevronRight,
   ClipboardList,
-  Copy,
   CreditCard,
   ExternalLink,
   KeyRound,
   Loader2,
   Lock,
   LogOut,
-  Mail,
   Music2,
   Palette,
   Plus,
@@ -29,19 +24,24 @@ import {
 } from 'lucide-react'
 import { Badge, Button, Card, EmptyState, Field, Input, Select, Sheet, Textarea, useToast } from '../components/ui'
 import { Calendar } from '../components/Calendar'
+import { DemoNotice } from '../components/DemoNotice'
 import {
+  adjustBooking,
+  confirmBooking,
   getProviderBySlug,
   hasSession,
   listBookings,
   markDepositPaidManually,
+  proposeAlternativeDate,
+  refuseBooking,
+  saveBookingNote,
   saveProvider,
   saveSession,
   clearSession,
-  updateBooking,
+  subscribeData,
 } from '../lib/store'
 import type { Booking, BookingLine, Option, ProviderInstance } from '../lib/types'
 import {
-  EVENT_TYPES,
   SLOT_LABEL,
   STATUS_LABEL,
   formatDateLong,
@@ -53,16 +53,30 @@ import {
   todayISO,
 } from '../lib/format'
 import { buildLine, computeTotals } from '../lib/pricing'
+import { unavailableDates } from '../lib/availability'
 import { cn, slugify } from '../lib/utils'
 
 type Tone = 'neutral' | 'accent' | 'brand' | 'success' | 'warning' | 'danger'
 const STATUS_TONE: Record<string, Tone> = {
   proposee: 'warning',
+  date_a_accepter: 'accent',
   confirmee: 'accent',
   acompte_paye: 'success',
   refusee: 'danger',
   annulee: 'danger',
   terminee: 'neutral',
+}
+
+function useIsDesktop(): boolean {
+  return useSyncExternalStore(
+    (callback) => {
+      const mq = window.matchMedia('(min-width: 1024px)')
+      mq.addEventListener('change', callback)
+      return () => mq.removeEventListener('change', callback)
+    },
+    () => window.matchMedia('(min-width: 1024px)').matches,
+    () => true,
+  )
 }
 
 type Tab = 'demandes' | 'offres' | 'disponibilites' | 'reglages'
@@ -91,28 +105,40 @@ export default function BackOffice() {
 
   useEffect(() => {
     let active = true
-    getProviderBySlug(slug).then((p) => {
-      if (!active) return
-      setProvider(p)
-      setLoading(false)
-      if (p) setAuthed(hasSession(p.id))
-    })
+    const load = () => {
+      getProviderBySlug(slug).then((p) => {
+        if (!active) return
+        setProvider(p)
+        setLoading(false)
+        if (p) setAuthed(hasSession(p.id))
+      })
+    }
+    load()
+    const unsubscribe = subscribeData(load)
     return () => {
       active = false
+      unsubscribe()
     }
   }, [slug])
 
-  const loadBookings = useMemo(
-    () => async (providerId: string) => {
-      const list = await listBookings(providerId)
-      setBookings(list)
-    },
-    [],
-  )
-
   useEffect(() => {
-    if (provider && authed) void loadBookings(provider.id)
-  }, [provider, authed, loadBookings])
+    if (!provider || !authed) return
+    let active = true
+    const load = async () => {
+      const list = await listBookings(provider.id)
+      if (active) setBookings(list)
+    }
+    void load()
+    const unsubscribe = subscribeData(() => void load())
+    return () => {
+      active = false
+      unsubscribe()
+    }
+  }, [provider, authed])
+
+  const refreshBookings = () => {
+    if (provider) void listBookings(provider.id).then(setBookings)
+  }
 
   const unlock = () => {
     if (!provider) return
@@ -148,7 +174,8 @@ export default function BackOffice() {
       .filter((b) => b.deposit.status === 'paye')
       .reduce((s, b) => s + b.deposit.amount, 0)
     const pipeline = confirmed.reduce((s, b) => s + b.pricing.total, 0)
-    return { pending, confirmed, collected, pipeline }
+    const balanceDue = confirmed.reduce((s, b) => s + Math.max(0, b.pricing.total - b.deposit.amount), 0)
+    return { pending, confirmed, collected, pipeline, balanceDue }
   }, [bookings])
 
   if (loading) {
@@ -218,10 +245,11 @@ export default function BackOffice() {
             Ouvrir le back-office
           </Button>
 
-          <div className="mt-5 rounded-xl bg-accent/8 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink/60">
+          <DemoNotice className="mt-5">Démo locale : le code est affiché pour faciliter la présentation. Ce n’est pas une authentification de production.</DemoNotice>
+          <div className="mt-3 rounded-xl bg-accent/8 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink/60">
             <p className="font-semibold text-ink">Code de démonstration</p>
             <p className="mt-1">
-              Usez <span className="font-mono font-bold text-accent">{provider.accessCode}</span> pour
+              Utilisez <span className="font-mono font-bold text-accent">{provider.accessCode}</span> pour
               cette instance. Un autre code ouvre un autre back-office, jamais celui-ci.
             </p>
           </div>
@@ -308,20 +336,20 @@ export default function BackOffice() {
             setFilter={setFilter}
             selected={selected}
             setSelected={setSelected}
-            onChanged={() => loadBookings(provider.id)}
+            onChanged={refreshBookings}
             onOpenClient={(code) =>
               window.open(`/r/${provider.slug}/${code}`, '_blank', 'noopener,noreferrer')
             }
           />
         )}
         {tab === 'offres' && (
-          <OffresTab provider={provider} onSave={(p) => { setProvider(p); void loadBookings(p.id) }} />
+          <OffresTab key={`offres-${provider.id}-${JSON.stringify(provider.formulas)}-${JSON.stringify(provider.options)}`} provider={provider} onSave={(p) => { setProvider(p); refreshBookings() }} />
         )}
         {tab === 'disponibilites' && (
-          <DispoTab provider={provider} onSave={(p) => { setProvider(p); void loadBookings(p.id) }} />
+          <DispoTab key={`dispo-${provider.id}-${provider.blockedDates.join(',')}`} provider={provider} onSave={(p) => { setProvider(p); refreshBookings() }} />
         )}
         {tab === 'reglages' && (
-          <ReglagesTab provider={provider} onSave={(p) => { setProvider(p); void loadBookings(p.id) }} />
+          <ReglagesTab key={`reglages-${provider.id}-${JSON.stringify(provider)}`} provider={provider} onSave={(p) => { setProvider(p); refreshBookings() }} />
         )}
       </main>
     </div>
@@ -334,7 +362,7 @@ interface DemandesProps {
   provider: ProviderInstance
   bookings: Booking[]
   allBookings: Booking[]
-  kpis: { pending: Booking[]; confirmed: Booking[]; collected: number; pipeline: number }
+  kpis: { pending: Booking[]; confirmed: Booking[]; collected: number; pipeline: number; balanceDue: number }
   filter: string
   setFilter: (f: 'all' | 'proposee' | 'confirmee' | 'acompte_paye' | 'autres') => void
   selected: string | null
@@ -346,6 +374,7 @@ interface DemandesProps {
 function DemandesTab({
   provider,
   bookings,
+  allBookings,
   kpis,
   filter,
   setFilter,
@@ -354,21 +383,13 @@ function DemandesTab({
   onChanged,
   onOpenClient,
 }: DemandesProps) {
-  const toast = useToast()
-  const current = bookings.find((b) => b.code === selected) ?? null
-
-  const act = async (
-    fn: () => Promise<unknown>,
-    successMessage: string,
-  ) => {
-    try {
-      await fn()
-      onChanged()
-      toast.push(successMessage, 'success')
-    } catch (err) {
-      toast.push(err instanceof Error ? err.message : 'Action impossible.', 'error')
-    }
-  }
+  const isDesktop = useIsDesktop()
+  const [search, setSearch] = useState('')
+  const current = allBookings.find((b) => b.code === selected) ?? null
+  const query = search.trim().toLowerCase()
+  const visible = query
+    ? bookings.filter((b) => `${b.client.couple} ${b.code} ${b.client.venue}`.toLowerCase().includes(query))
+    : bookings
 
   return (
     <div>
@@ -383,12 +404,9 @@ function DemandesTab({
           },
           { label: 'Acomptes encaissés', value: money(kpis.collected), hint: 'cette instance' },
           {
-            label: 'Part encaissée',
-            value:
-              kpis.pipeline > 0
-                ? `${Math.round((kpis.collected / kpis.pipeline) * 100)} %`
-                : '—',
-            hint: 'du CA confirmé',
+            label: 'Solde à recevoir',
+            value: money(kpis.balanceDue),
+            hint: 'sur les dossiers confirmés',
           },
         ].map((k) => (
           <Card key={k.label} className="p-4">
@@ -426,17 +444,27 @@ function DemandesTab({
         ))}
       </div>
 
+      <div className="mt-4">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher un couple, un code, un lieu…"
+          aria-label="Rechercher une demande"
+          size="sm"
+        />
+      </div>
+
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.05fr]">
         {/* list */}
         <div className="space-y-2.5">
-          {bookings.length === 0 && (
+          {visible.length === 0 && (
             <EmptyState
               icon={<ClipboardList className="h-10 w-10" />}
               title="Aucune demande"
               description="Les demandes envoyées depuis la page publique apparaîtront ici."
             />
           )}
-          {bookings.map((b) => (
+          {visible.map((b) => (
             <button
               key={b.code}
               type="button"
@@ -471,23 +499,45 @@ function DemandesTab({
         </div>
 
         {/* detail */}
-        <div className="lg:sticky lg:top-32 lg:self-start">
-          {current ? (
-            <BookingDetail
-              provider={provider}
-              booking={current}
-              onChanged={onChanged}
-              onOpenClient={() => onOpenClient(current.code)}
-              onClose={() => setSelected(null)}
-            />
-          ) : (
-            <EmptyState
-              icon={<ClipboardList className="h-10 w-10" />}
-              title="Sélectionnez une demande"
-              description="Confirmez une date, réglez les options et suivez l’acompte depuis le panneau de droite."
-            />
-          )}
-        </div>
+        {isDesktop ? (
+          <div className="lg:sticky lg:top-32 lg:self-start">
+            {current ? (
+              <BookingDetail
+                key={`${current.code}-${current.quoteVersion}-${current.status}`}
+                provider={provider}
+                booking={current}
+                allBookings={allBookings}
+                onChanged={onChanged}
+                onOpenClient={() => onOpenClient(current.code)}
+                onClose={() => setSelected(null)}
+              />
+            ) : (
+              <EmptyState
+                icon={<ClipboardList className="h-10 w-10" />}
+                title="Sélectionnez une demande"
+                description="Confirmez une date, réglez les options et suivez l’acompte."
+              />
+            )}
+          </div>
+        ) : (
+          <Sheet
+            open={!!current}
+            onClose={() => setSelected(null)}
+            title={<p className="font-display text-[20px] text-ink">Détail de la demande</p>}
+          >
+            {current && (
+              <BookingDetail
+                key={`${current.code}-${current.quoteVersion}-${current.status}`}
+                provider={provider}
+                booking={current}
+                allBookings={allBookings}
+                onChanged={onChanged}
+                onOpenClient={() => onOpenClient(current.code)}
+                onClose={() => setSelected(null)}
+              />
+            )}
+          </Sheet>
+        )}
       </div>
     </div>
   )
@@ -498,12 +548,14 @@ function DemandesTab({
 function BookingDetail({
   provider,
   booking,
+  allBookings,
   onChanged,
   onOpenClient,
   onClose,
 }: {
   provider: ProviderInstance
   booking: Booking
+  allBookings: Booking[]
   onChanged: () => void
   onOpenClient: () => void
   onClose: () => void
@@ -515,19 +567,18 @@ function BookingDetail({
   const [note, setNote] = useState(booking.note ?? '')
   const [altDate, setAltDate] = useState('')
   const [addOptionId, setAddOptionId] = useState('')
-  const [addQty, setAddQty] = useState(1)
   const [sheetOpen, setSheetOpen] = useState(false)
-
-  useEffect(() => {
-    setFormulaId(booking.formulaId)
-    setLines(booking.options)
-    setNote(booking.note ?? '')
-  }, [booking])
+  const [manualPayOpen, setManualPayOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
 
   const formula = provider.formulas.find((f) => f.id === formulaId) ?? provider.formulas[0]
   const totals = computeTotals(formula?.price ?? 0, lines, provider.depositPercent)
+  const canEditQuote = booking.status === 'proposee' || booking.status === 'date_a_accepter'
+  const blockedForAlt = unavailableDates(provider, allBookings, booking.code)
 
   const run = async (fn: () => Promise<unknown>, message: string) => {
+    if (busy) return
+    setBusy(true)
     try {
       await fn()
       onChanged()
@@ -536,50 +587,39 @@ function BookingDetail({
     } catch (err) {
       toast.push(err instanceof Error ? err.message : 'Action impossible.', 'error')
     }
+    setBusy(false)
   }
 
   const saveOptions = () =>
     run(
       () =>
-        updateBooking(
+        adjustBooking(
           provider.id,
           booking.code,
           {
             formulaId: formula.id,
-            formulaName: formula.name,
-            formulaPrice: formula.price,
-            options: lines,
-            pricing: {
-              subtotal: totals.subtotal,
-              total: totals.total,
-              depositPercent: provider.depositPercent,
-              depositAmount: totals.depositAmount,
-            },
+            lines: lines.map((l) => ({ optionId: l.optionId, qty: l.qty, unitPrice: l.unitPrice })),
           },
-          { label: 'Offre et options ajustées', detail: `${formula.name} · ${money(totals.total)}`, actor: 'prestataire' },
+          booking.quoteVersion,
         ),
-      'Offre mise à jour.',
+      'Offre mise à jour. Le client voit le nouveau montant.',
     )
 
   const updateLine = (optionId: string, patch: Partial<BookingLine>) => {
+    const maxQty = provider.options.find((o) => o.id === optionId)?.maxQty ?? 10_000
     setLines((prev) =>
-      prev.map((l) =>
-        l.optionId === optionId
-          ? { ...l, ...patch, lineTotal: Math.round((patch.unitPrice ?? l.unitPrice) * (patch.qty ?? l.qty) * 100) / 100 }
-          : l,
-      ),
+      prev.map((l) => {
+        if (l.optionId !== optionId) return l
+        const qty = Math.max(0, Math.min(maxQty, Math.trunc(patch.qty ?? l.qty)))
+        const unitPrice = Math.max(0, Math.round((patch.unitPrice ?? l.unitPrice) * 100) / 100)
+        return { ...l, ...patch, qty, unitPrice, lineTotal: Math.round(unitPrice * qty * 100) / 100 }
+      }),
     )
   }
 
   const addLine = (option: Option) => {
-    const existing = lines.find((l) => l.optionId === option.id)
-    if (existing) {
-      updateLine(option.id, { qty: existing.qty + 1 })
-    } else {
-      setLines((prev) => [...prev, buildLine(option, addQty)])
-    }
+    setLines((prev) => [...prev, buildLine(option, 1)])
     setAddOptionId('')
-    setAddQty(1)
   }
 
   const availableOptions = provider.options.filter((o) => !lines.some((l) => l.optionId === o.id))
@@ -588,199 +628,104 @@ function BookingDetail({
     <Card padded={false}>
       <div className="flex items-start justify-between gap-3 border-b border-line p-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge tone={STATUS_TONE[booking.status]}>{STATUS_LABEL[booking.status]}</Badge>
             <span className="font-mono text-[11px] text-ink/40">{booking.code}</span>
           </div>
-          <h2 className="mt-2 font-display text-[24px] leading-tight text-ink">
-            {booking.client.couple}
-          </h2>
-          <p className="mt-0.5 text-[12.5px] text-ink/55">
-            {booking.client.email} · {booking.client.phone}
-          </p>
+          <h2 className="mt-2 font-display text-[24px] leading-tight text-ink">{booking.client.couple}</h2>
+          <p className="mt-0.5 break-all text-[12.5px] text-ink/55">{booking.client.email} · {booking.client.phone}</p>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink/40 hover:bg-ink/6"
-          aria-label="Fermer"
-        >
+        <button type="button" onClick={onClose} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink/40 hover:bg-ink/6" aria-label="Fermer">
           <X className="h-4 w-4" />
         </button>
       </div>
 
       <div className="space-y-4 p-4">
-        {/* client + date */}
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-line p-3">
             <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Date demandée</p>
             <p className="mt-1 text-[13.5px] font-semibold text-ink">{formatDateLong(booking.date)}</p>
-            <p className="text-[12.5px] text-ink/55">
-              {SLOT_LABEL[booking.slot]} · {booking.client.eventType}
-            </p>
+            <p className="text-[12.5px] text-ink/55">{SLOT_LABEL[booking.slot]} · {booking.client.eventType}</p>
           </div>
           <div className="rounded-xl border border-line p-3">
             <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Lieu</p>
             <p className="mt-1 text-[13.5px] font-semibold text-ink">{booking.client.venue || '—'}</p>
-            <p className="text-[12.5px] text-ink/55">
-              {booking.client.city}
-              {booking.client.guestCount ? ` · ${booking.client.guestCount} invités` : ''}
-            </p>
+            <p className="text-[12.5px] text-ink/55">{booking.client.city}{booking.client.guestCount ? ` · ${booking.client.guestCount} invités` : ''}</p>
           </div>
         </div>
 
         {booking.client.message && (
-          <div className="rounded-xl border-l-2 border-accent/50 bg-accent/6 px-3.5 py-3 text-[13px] leading-relaxed text-ink/70">
-            “{booking.client.message}”
-          </div>
+          <div className="rounded-xl border-l-2 border-accent/50 bg-accent/6 px-3.5 py-3 text-[13px] leading-relaxed text-ink/70">“{booking.client.message}”</div>
         )}
 
-        {/* offer editing */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">
-              Offre & options
-            </p>
-            <button
-              type="button"
-              onClick={() => setEditing((e) => !e)}
-              className="text-[12px] font-semibold text-accent hover:underline"
-            >
-              {editing ? 'Terminer' : 'Régler'}
-            </button>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Offre & options</p>
+            {canEditQuote ? (
+              <button type="button" onClick={() => setEditing((e) => !e)} className="text-[12px] font-semibold text-accent hover:underline">
+                {editing ? 'Fermer sans enregistrer' : 'Régler'}
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11.5px] text-ink/40"><Lock className="h-3 w-3" /> Verrouillé</span>
+            )}
           </div>
 
-          {editing ? (
+          {editing && canEditQuote ? (
             <div className="space-y-2.5">
               <Field label="Formule">
                 <Select value={formulaId} onChange={(e) => setFormulaId(e.target.value)}>
-                  {provider.formulas.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.name} — {money(f.price)}
-                    </option>
-                  ))}
+                  {provider.formulas.map((f) => <option key={f.id} value={f.id}>{f.name} — {money(f.price)}</option>)}
                 </Select>
               </Field>
-
               {lines.map((l) => (
                 <div key={l.optionId} className="rounded-xl border border-line p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-[13.5px] font-semibold text-ink">{l.name}</p>
-                    <button
-                      type="button"
-                      onClick={() => setLines((prev) => prev.filter((x) => x.optionId !== l.optionId))}
-                      className="text-ink/30 hover:text-red-600"
-                      aria-label="Retirer"
-                    >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[13px] font-semibold text-ink">{l.name}</p>
+                    <button type="button" onClick={() => setLines((prev) => prev.filter((x) => x.optionId !== l.optionId))} className="text-ink/30 hover:text-red-600" aria-label={`Retirer ${l.name}`}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <label className="block">
-                      <span className="mb-1 block text-[11px] font-semibold text-ink/55">
-                        Quantité ({optionUnitLabel(l.unit, 2)})
-                      </span>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={l.qty}
-                        onChange={(e) =>
-                          updateLine(l.optionId, { qty: Math.max(0, Number(e.target.value) || 0) })
-                        }
-                        
-                      />
+                      <span className="mb-1 block text-[11px] font-semibold text-ink/55">Quantité ({optionUnitLabel(l.unit, 2)})</span>
+                      <Input type="number" min={0} max={provider.options.find((o) => o.id === l.optionId)?.maxQty} value={l.qty} onChange={(e) => updateLine(l.optionId, { qty: Number(e.target.value) || 0 })} size="sm" />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-[11px] font-semibold text-ink/55">
-                        Prix unitaire (€)
-                      </span>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        value={l.unitPrice}
-                        onChange={(e) =>
-                          updateLine(l.optionId, {
-                            unitPrice: Math.max(0, Number(e.target.value) || 0),
-                          })
-                        }
-                        
-                      />
+                      <span className="mb-1 block text-[11px] font-semibold text-ink/55">Prix unitaire (€)</span>
+                      <Input type="number" min={0} step={0.01} value={l.unitPrice} onChange={(e) => updateLine(l.optionId, { unitPrice: Number(e.target.value) || 0 })} size="sm" />
                     </label>
                   </div>
-                  <p className="mt-2 text-right text-[12.5px] font-semibold text-ink">
-                    {money(l.lineTotal)}
-                  </p>
+                  <p className="mt-2 text-right text-[12.5px] font-semibold text-ink">{money(l.lineTotal)}</p>
                 </div>
               ))}
-
               {availableOptions.length > 0 && (
                 <div className="rounded-xl border border-dashed border-line p-3">
                   <p className="mb-2 text-[11.5px] font-semibold text-ink/55">Ajouter une option</p>
                   <div className="flex gap-2">
-                    <Select
-                      value={addOptionId}
-                      onChange={(e) => setAddOptionId(e.target.value)} size="sm">
+                    <Select value={addOptionId} onChange={(e) => setAddOptionId(e.target.value)} size="sm">
                       <option value="">Choisir…</option>
-                      {availableOptions.map((o) => (
-                        <option key={o.id} value={o.id}>
-                          {o.name} — {o.price > 0 ? money(o.price) : 'inclus'}
-                        </option>
-                      ))}
+                      {availableOptions.map((o) => <option key={o.id} value={o.id}>{o.name} — {o.price > 0 ? money(o.price) : 'inclus'}</option>)}
                     </Select>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-10 shrink-0"
-                      disabled={!addOptionId}
-                      onClick={() => {
-                        const opt = provider.options.find((o) => o.id === addOptionId)
-                        if (opt) addLine(opt)
-                      }}
-                      icon={<Plus className="h-3.5 w-3.5" />}
-                    >
-                      Ajouter
-                    </Button>
+                    <Button size="sm" variant="outline" className="h-10 shrink-0" disabled={!addOptionId} onClick={() => { const opt = provider.options.find((o) => o.id === addOptionId); if (opt) addLine(opt) }} icon={<Plus className="h-3.5 w-3.5" />}>Ajouter</Button>
                   </div>
                 </div>
               )}
-
               <div className="rounded-xl bg-ink/4 p-3">
-                <div className="flex items-center justify-between text-[13px] text-ink/60">
-                  <span>Total</span>
-                  <span className="font-display text-[20px] text-ink">{money(totals.total)}</span>
-                </div>
-                <div className="flex items-center justify-between text-[12.5px] text-ink/50">
-                  <span>Acompte {provider.depositPercent} %</span>
-                  <span>{money(totals.depositAmount)}</span>
-                </div>
-                <Button className="mt-3" full size="sm" onClick={saveOptions}>
-                  Enregistrer les ajustements
-                </Button>
+                <div className="flex items-center justify-between text-[13px] text-ink/60"><span>Total</span><span className="font-display text-[20px] text-ink">{money(totals.total)}</span></div>
+                <div className="flex items-center justify-between text-[12.5px] text-ink/50"><span>Acompte {provider.depositPercent} %</span><span>{money(totals.depositAmount)}</span></div>
+                <Button className="mt-3" full size="sm" onClick={saveOptions} loading={busy}>Enregistrer les ajustements</Button>
               </div>
             </div>
           ) : (
             <div className="rounded-xl border border-line">
               <div className="flex items-center justify-between border-b border-line px-3.5 py-2.5">
                 <span className="text-[13.5px] font-semibold text-ink">{booking.formulaName}</span>
-                <span className="text-[13.5px] font-medium text-ink">
-                  {money(booking.formulaPrice)}
-                </span>
+                <span className="text-[13.5px] font-medium text-ink">{money(booking.formulaPrice)}</span>
               </div>
               {booking.options.map((l) => (
-                <div
-                  key={l.optionId}
-                  className="flex items-center justify-between border-b border-line px-3.5 py-2 last:border-b-0"
-                >
-                  <span className="text-[13px] text-ink/70">
-                    {l.name}
-                    <span className="ml-1.5 text-[11px] text-ink/40">
-                      {optionUnitLabel(l.unit, l.qty)}
-                    </span>
-                  </span>
-                  <span className="text-[13px] text-ink">
-                    {l.lineTotal > 0 ? `+ ${money(l.lineTotal)}` : 'Inclus'}
-                  </span>
+                <div key={l.optionId} className="flex items-center justify-between border-b border-line px-3.5 py-2 last:border-b-0">
+                  <span className="text-[13px] text-ink/70">{l.name}<span className="ml-1.5 text-[11px] text-ink/40">{optionUnitLabel(l.unit, l.qty)}</span></span>
+                  <span className="text-[13px] text-ink">{l.lineTotal > 0 ? `+ ${money(l.lineTotal)}` : 'Inclus'}</span>
                 </div>
               ))}
               <div className="flex items-center justify-between bg-ink/3 px-3.5 py-2.5">
@@ -789,147 +734,52 @@ function BookingDetail({
               </div>
             </div>
           )}
+          {!canEditQuote && <p className="mt-2 text-[11.5px] leading-relaxed text-ink/45">Le devis est verrouillé après confirmation : le client paie exactement le montant affiché.</p>}
         </div>
 
-        {/* deposit */}
-        <div
-          className={cn(
-            'rounded-xl border p-3',
-            booking.deposit.status === 'paye'
-              ? 'border-emerald-600/30 bg-emerald-600/5'
-              : 'border-accent/40 bg-accent/6',
-          )}
-        >
+        <div className={cn('rounded-xl border p-3', booking.deposit.status === 'paye' ? 'border-emerald-600/30 bg-emerald-600/5' : 'border-accent/40 bg-accent/6')}>
           <div className="flex items-center justify-between">
-            <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-ink">
-              <CreditCard className="h-3.5 w-3.5" /> Acompte {booking.pricing.depositPercent} %
-            </p>
-            <p className="font-display text-[19px] text-ink">
-              {money(booking.deposit.amount)}
-            </p>
+            <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-ink"><CreditCard className="h-3.5 w-3.5" /> Acompte {booking.pricing.depositPercent} %</p>
+            <p className="font-display text-[19px] text-ink">{money(booking.deposit.amount)}</p>
           </div>
           {booking.deposit.status === 'paye' ? (
-            <p className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium text-emerald-700">
-              <Check className="h-3.5 w-3.5" /> Reçu · {booking.deposit.reference}
-            </p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium text-emerald-700"><Check className="h-3.5 w-3.5" /> Reçu · {booking.deposit.reference}</p>
           ) : (
-            <p className="mt-1.5 text-[12px] text-ink/55">En attente de règlement par le client</p>
+            <p className="mt-1.5 text-[12px] text-ink/55">{booking.status === 'confirmee' ? 'En attente de règlement par le client' : 'Payable après confirmation de la date'}</p>
           )}
         </div>
 
-        {/* actions */}
+        {editing && <p className="rounded-lg bg-accent/8 px-3 py-2 text-[12px] text-ink/60">Enregistrez ou fermez les ajustements avant d’agir sur la date.</p>}
+
         <div className="flex flex-wrap gap-2">
           {booking.status === 'proposee' && (
             <>
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() =>
-                  run(
-                    () =>
-                      updateBooking(
-                        provider.id,
-                        booking.code,
-                        { status: 'confirmee' },
-                        { label: 'Date confirmée', detail: formatDateLong(booking.date), actor: 'prestataire' },
-                      ),
-                    'Date confirmée — le client peut payer l’acompte.',
-                  )
-                }
-                icon={<CheckCircle2 className="h-3.5 w-3.5" />}
-              >
-                Confirmer la date
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setSheetOpen(true)}>
-                Proposer une autre date
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-red-600"
-                onClick={() =>
-                  run(
-                    () =>
-                      updateBooking(
-                        provider.id,
-                        booking.code,
-                        { status: 'refusee' },
-                        { label: 'Demande refusée', actor: 'prestataire' },
-                      ),
-                    'Demande refusée.',
-                  )
-                }
-              >
-                Refuser
-              </Button>
+              <Button size="sm" variant="primary" disabled={editing || busy} onClick={() => run(() => confirmBooking(provider.id, booking.code, booking.quoteVersion), 'Date confirmée — le client peut payer l’acompte.')} icon={<CheckCircle2 className="h-3.5 w-3.5" />}>Confirmer la date</Button>
+              <Button size="sm" variant="outline" disabled={editing || busy} onClick={() => setSheetOpen(true)}>Proposer une autre date</Button>
+              <Button size="sm" variant="ghost" className="text-red-600" disabled={editing || busy} onClick={() => run(() => refuseBooking(provider.id, booking.code), 'Demande refusée.')}>Refuser</Button>
             </>
           )}
+          {booking.status === 'date_a_accepter' && <p className="text-[12.5px] text-ink/55">En attente d’acceptation de la nouvelle date par le client.</p>}
           {booking.status === 'confirmee' && booking.deposit.status !== 'paye' && (
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={() =>
-                run(
-                  () => markDepositPaidManually(provider.id, booking.code, 'Virement bancaire'),
-                  'Acompte marqué comme reçu.',
-                )
-              }
-              icon={<Wallet className="h-3.5 w-3.5" />}
-            >
-              Marquer l’acompte reçu
-            </Button>
+            <Button size="sm" variant="primary" disabled={busy} onClick={() => setManualPayOpen(true)} icon={<Wallet className="h-3.5 w-3.5" />}>Marquer l’acompte reçu</Button>
           )}
-          <Button size="sm" variant="outline" onClick={onOpenClient} icon={<ArrowUpRight className="h-3.5 w-3.5" />}>
-            Ouvrir côté client
-          </Button>
+          <Button size="sm" variant="outline" onClick={onOpenClient} icon={<ArrowUpRight className="h-3.5 w-3.5" />}>Ouvrir côté client</Button>
         </div>
 
-        {/* internal note */}
         <div>
-          <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">
-            Note interne
-          </p>
-          <Textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Précisions sur la date, le matériel, le trajet…"
-            
-          />
+          <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Note interne</p>
+          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Précisions sur la date, le matériel, le trajet…" size="sm" />
           {note !== (booking.note ?? '') && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="mt-2"
-              onClick={() =>
-                run(
-                  () =>
-                    updateBooking(provider.id, booking.code, { note }, {
-                      label: 'Note interne mise à jour',
-                      actor: 'prestataire',
-                    }),
-                  'Note enregistrée.',
-                )
-              }
-            >
-              Enregistrer la note
-            </Button>
+            <Button size="sm" variant="secondary" className="mt-2" loading={busy} onClick={() => run(() => saveBookingNote(provider.id, booking.code, note), 'Note enregistrée.')}>Enregistrer la note</Button>
           )}
         </div>
 
-        {/* timeline */}
         <div>
-          <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">
-            Historique
-          </p>
+          <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.13em] text-ink/40">Historique</p>
           <ol className="space-y-2">
             {booking.timeline.map((t, i) => (
               <li key={i} className="flex gap-2.5">
-                <span
-                  className={cn(
-                    'mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full',
-                    t.actor === 'prestataire' ? 'bg-accent' : t.actor === 'systeme' ? 'bg-emerald-600' : 'bg-brand',
-                  )}
-                />
+                <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', t.actor === 'prestataire' ? 'bg-accent' : t.actor === 'systeme' ? 'bg-emerald-600' : 'bg-brand')} />
                 <div>
                   <p className="text-[13px] font-medium text-ink">{t.label}</p>
                   {t.detail && <p className="text-[12px] text-ink/50">{t.detail}</p>}
@@ -941,44 +791,32 @@ function BookingDetail({
         </div>
       </div>
 
-      {/* alternative date sheet */}
       <Sheet
         open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
+        onClose={() => { if (!busy) setSheetOpen(false) }}
         title={<p className="font-display text-[22px] text-ink">Proposer une autre date</p>}
-        footer={
-          <Button
-            full
-            disabled={!altDate}
-            onClick={() => {
-              void run(
-                () =>
-                  updateBooking(
-                    provider.id,
-                    booking.code,
-                    { date: altDate, status: 'proposee' },
-                    {
-                      label: 'Date alternative proposée',
-                      detail: formatDateLong(altDate),
-                      actor: 'prestataire',
-                    },
-                  ),
-                'Date alternative envoyée au client.',
-              )
-              setSheetOpen(false)
-            }}
-          >
-            Proposer cette date
-          </Button>
-        }
+        footer={<Button full disabled={!altDate || busy} onClick={() => { void run(() => proposeAlternativeDate(provider.id, booking.code, altDate), 'Autre date proposée au client.'); setSheetOpen(false) }}>Proposer cette date</Button>}
       >
         <div className="space-y-4">
-          <Calendar value={altDate || null} onChange={setAltDate} blockedDates={provider.blockedDates} />
-          <p className="text-[12.5px] leading-relaxed text-ink/55">
-            Le client reçoit une notification et voit la nouvelle date dans son suivi de
-            réservation.
-          </p>
+          <Calendar value={altDate || null} onChange={setAltDate} blockedDates={blockedForAlt} />
+          <p className="text-[12.5px] leading-relaxed text-ink/55">Le client verra la nouvelle date sur son lien de suivi et devra l’accepter avant que vous puissiez confirmer.</p>
         </div>
+      </Sheet>
+
+      <Sheet
+        open={manualPayOpen}
+        onClose={() => { if (!busy) setManualPayOpen(false) }}
+        title={<p className="font-display text-[22px] text-ink">Marquer l’acompte reçu</p>}
+        footer={
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" disabled={busy} onClick={() => setManualPayOpen(false)}>Annuler</Button>
+            <Button variant="primary" loading={busy} onClick={() => { void run(() => markDepositPaidManually(provider.id, booking.code), 'Acompte marqué comme reçu (démo).'); setManualPayOpen(false) }}>Confirmer la réception</Button>
+          </div>
+        }
+      >
+        <p className="text-[14px] leading-relaxed text-ink/65">
+          Vous confirmez avoir reçu {money(booking.deposit.amount)} pour {booking.client.couple}. En démo, aucun fonds réel n’est manipulé ; le règlement sera enregistré dans cette instance uniquement.
+        </p>
       </Sheet>
     </Card>
   )
@@ -997,11 +835,6 @@ function OffresTab({
   const [formulas, setFormulas] = useState(provider.formulas)
   const [options, setOptions] = useState(provider.options)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    setFormulas(provider.formulas)
-    setOptions(provider.options)
-  }, [provider])
 
   const updateFormula = (id: string, patch: Partial<(typeof formulas)[number]>) =>
     setFormulas((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)))
@@ -1168,6 +1001,16 @@ function OffresTab({
                 size="sm"
               />
             </Field>
+            <Field label="Quantité maximale" hint="1 pour un forfait unique, plus pour des heures ou des kilomètres.">
+              <Input
+                type="number"
+                min={1}
+                max={10000}
+                value={o.maxQty}
+                onChange={(e) => updateOption(o.id, { maxQty: Math.max(1, Math.trunc(Number(e.target.value) || 1)) })}
+                size="sm"
+              />
+            </Field>
           </div>
           <Button
             size="sm"
@@ -1196,10 +1039,6 @@ function DispoTab({
   const toast = useToast()
   const [blocked, setBlocked] = useState(provider.blockedDates)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    setBlocked(provider.blockedDates)
-  }, [provider])
 
   const toggle = (iso: string) =>
     setBlocked((prev) => (prev.includes(iso) ? prev.filter((d) => d !== iso) : [...prev, iso].sort()))
@@ -1237,10 +1076,11 @@ function DispoTab({
             onChange={toggle}
             blockedDates={blocked}
             minISO={todayISO()}
+            allowBlocked
           />
           <p className="mt-3 text-[12px] leading-relaxed text-ink/50">
-            Cliquez sur une date pour la basculer entre disponible et indisponible. La date du jour
-            et les dates passées restent bloquées.
+            Cliquez sur une date pour la basculer entre disponible et indisponible. Les dates passées
+            restent bloquées. Les dates déjà confirmées ou payées sont automatiquement indisponibles côté client.
           </p>
         </Card>
 
@@ -1288,10 +1128,6 @@ function ReglagesTab({
   const toast = useToast()
   const [draft, setDraft] = useState(provider)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    setDraft(provider)
-  }, [provider])
 
   const set = <K extends keyof ProviderInstance>(key: K, value: ProviderInstance[K]) =>
     setDraft((d) => ({ ...d, [key]: value }))
@@ -1367,6 +1203,13 @@ function ReglagesTab({
               size="sm"
             />
           </Field>
+          <Field label="Présentation" className="sm:col-span-2">
+            <Textarea
+              value={draft.bio}
+              onChange={(e) => set('bio', e.target.value)}
+              size="sm"
+            />
+          </Field>
           <Field label="E-mail">
             <Input
               value={draft.contact.email}
@@ -1393,14 +1236,14 @@ function ReglagesTab({
           <Wallet className="h-3.5 w-3.5" /> Acompte
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Pourcentage d’acompte" hint="Demandé au client après confirmation de la date.">
+          <Field label="Pourcentage d’acompte" hint="Demandé au client après confirmation de la date. Les devis déjà créés conservent leur pourcentage.">
             <Input
               type="number"
-              min={0}
+              min={1}
               max={100}
               value={draft.depositPercent}
               onChange={(e) =>
-                set('depositPercent', Math.min(100, Math.max(0, Number(e.target.value) || 0)))
+                set('depositPercent', Math.min(100, Math.max(1, Number(e.target.value) || 1)))
               }
               size="sm"
             />
@@ -1507,9 +1350,22 @@ function ReglagesTab({
             </div>
           </Field>
           <Field label="Adresse publique" hint="Le lien envoyé à vos clients.">
+            <div className="flex items-center gap-2">
+              <span className="shrink-0 text-[13px] text-ink/40">/p/</span>
+              <Input
+                value={draft.slug}
+                onChange={(e) => set('slug', slugify(e.target.value))}
+                size="sm"
+              />
+            </div>
+          </Field>
+          <Field label="Déplacement inclus (km)" hint="Rayon inclus dans les formules ; au-delà, l’option kilométrique s’applique.">
             <Input
-              value={`/p/${draft.slug}`}
-              onChange={(e) => set('slug', slugify(e.target.value))}
+              type="number"
+              min={0}
+              max={500}
+              value={draft.travelIncludedKm}
+              onChange={(e) => set('travelIncludedKm', Math.min(500, Math.max(0, Number(e.target.value) || 0)))}
               size="sm"
             />
           </Field>

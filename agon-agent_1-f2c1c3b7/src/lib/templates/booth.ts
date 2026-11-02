@@ -120,6 +120,7 @@ export const boothTemplate: TemplateDef = {
       },
     ],
     depositPercent: 30,
+    travelIncludedKm: 40,
     palette: { brand: '#231E2B', accent: '#8A6E9B', paper: '#FAF7F5' },
     blockedDates: [],
     contact: {

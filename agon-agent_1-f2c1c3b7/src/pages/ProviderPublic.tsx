@@ -15,7 +15,8 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { Badge, Button, Card, EmptyState, Skeleton, Stars } from '../components/ui'
-import { getProviderBySlug } from '../lib/store'
+import { getProviderBySlug, subscribeData } from '../lib/store'
+import { DemoNotice } from '../components/DemoNotice'
 import type { ProviderInstance } from '../lib/types'
 import { money, optionUnitLabel } from '../lib/format'
 import { cn } from '../lib/utils'
@@ -24,19 +25,24 @@ export default function ProviderPublic() {
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const [provider, setProvider] = useState<ProviderInstance | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loadedSlug, setLoadedSlug] = useState('')
+  const loading = loadedSlug !== slug
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   useEffect(() => {
     let active = true
-    setLoading(true)
-    getProviderBySlug(slug).then((p) => {
-      if (!active) return
-      setProvider(p)
-      setLoading(false)
-    })
+    const load = () => {
+      getProviderBySlug(slug).then((p) => {
+        if (!active) return
+        setProvider(p)
+        setLoadedSlug(slug)
+      })
+    }
+    load()
+    const unsubscribe = subscribeData(load)
     return () => {
       active = false
+      unsubscribe()
     }
   }, [slug])
 
@@ -83,6 +89,15 @@ export default function ProviderPublic() {
   }
 
   const fromPrice = Math.min(...provider.formulas.map((f) => f.price))
+  const faqAnswer = (f: { q: string; a: string }) => {
+    if (/acompte/i.test(f.q)) {
+      return `Après validation de votre date par ${provider.displayName}, l’acompte de ${provider.depositPercent} % est payable sur votre lien de réservation. Il est encaissé par ce seul prestataire et n’est jamais partagé avec un autre. En mode démo, aucun débit réel n’a lieu.`
+    }
+    if (/déplacement/i.test(f.q)) {
+      return `Le déplacement est inclus dans un rayon de ${provider.travelIncludedKm} km autour de ${provider.city}. Au-delà, le kilométrage supplémentaire peut être ajouté en option et apparaît dans le total avant l’envoi de la demande.`
+    }
+    return f.a
+  }
 
   return (
     <div
@@ -121,7 +136,7 @@ export default function ProviderPublic() {
                 <MapPin className="h-3 w-3" /> {provider.city}
               </Badge>
               <Badge className="bg-white/15 text-white backdrop-blur-sm">
-                <BadgeCheck className="h-3 w-3 text-accent" /> Vérifié
+                <BadgeCheck className="h-3 w-3 text-accent" /> Profil démo
               </Badge>
             </div>
             <h1 className="font-display text-[40px] leading-[1.02] text-white sm:text-[54px]">
@@ -143,6 +158,11 @@ export default function ProviderPublic() {
 
       {/* --------------------------------------------------------- content */}
       <main className="mx-auto max-w-3xl px-4 pb-40 pt-6 sm:px-6">
+        <DemoNotice className="mb-6">
+          <strong className="font-semibold text-ink">Profil de démonstration.</strong> Tarifs et avis sont des exemples.
+          Aucun paiement réel n’est effectué.
+        </DemoNotice>
+
         {/* à propos */}
         <section className="mb-10">
           <div className="flex flex-wrap gap-2">
@@ -173,7 +193,7 @@ export default function ProviderPublic() {
         <section id="prestations" className="mb-10">
           <h2 className="mb-1 font-display text-[30px] text-ink">Mes formules</h2>
           <p className="mb-5 text-[14px] text-ink/55">
-            Prix TTC, déplacement inclus dans 50 km. Les options s’ajoutent à l’étape suivante.
+            Prix TTC, déplacement inclus dans {provider.travelIncludedKm} km. Les options s’ajoutent à l’étape suivante.
           </p>
           <div className="space-y-3">
             {provider.formulas.map((f) => (
@@ -205,9 +225,9 @@ export default function ProviderPublic() {
                 <p className="mt-3 text-[14px] leading-relaxed text-ink/65">{f.description}</p>
                 <ul className="mt-4 space-y-1.5">
                   {f.includes.map((inc) => (
-                    <li key={inc} className="flex items-start gap-2 text-[13.5px] text-ink/70">
+                    <li key={/déplacement inclus/i.test(inc) ? `Déplacement inclus dans ${provider.travelIncludedKm} km` : inc} className="flex items-start gap-2 text-[13.5px] text-ink/70">
                       <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
-                      {inc}
+                      {/déplacement inclus/i.test(inc) ? `Déplacement inclus dans ${provider.travelIncludedKm} km` : inc}
                     </li>
                   ))}
                 </ul>
@@ -296,7 +316,10 @@ export default function ProviderPublic() {
         {/* avis */}
         {provider.reviews.length > 0 && (
           <section className="mb-10">
-            <h2 className="mb-4 font-display text-[30px] text-ink">Ils en parlent</h2>
+            <div className="mb-4 flex items-baseline justify-between gap-3">
+              <h2 className="font-display text-[30px] text-ink">Ils en parlent</h2>
+              <Badge tone="outline">Avis d’exemple</Badge>
+            </div>
             <div className="space-y-3">
               {provider.reviews.map((r, i) => (
                 <Card key={i}>
@@ -334,7 +357,7 @@ export default function ProviderPublic() {
                   />
                 </button>
                 {openFaq === i && (
-                  <p className="px-4 pb-4 text-[14px] leading-relaxed text-ink/65">{f.a}</p>
+                  <p className="px-4 pb-4 text-[14px] leading-relaxed text-ink/65">{faqAnswer(f)}</p>
                 )}
               </div>
             ))}
@@ -368,7 +391,7 @@ export default function ProviderPublic() {
 
       {/* ------------------------------------------------------ sticky bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 pt-3 pb-safe">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-wider text-ink/45">À partir de</p>
             <p className="font-display text-xl leading-none text-ink">{money(fromPrice)}</p>

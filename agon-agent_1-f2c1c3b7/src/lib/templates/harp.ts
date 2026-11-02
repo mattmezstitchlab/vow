@@ -109,6 +109,7 @@ export const harpTemplate: TemplateDef = {
       },
     ],
     depositPercent: 30,
+    travelIncludedKm: 50,
     palette: { brand: '#1D2A25', accent: '#5F7360', paper: '#FAF7F1' },
     blockedDates: [],
     contact: {

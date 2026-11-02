@@ -129,6 +129,7 @@ export const djTemplate: TemplateDef = {
       },
     ],
     depositPercent: 30,
+    travelIncludedKm: 40,
     palette: { brand: '#241C1A', accent: '#C2603C', paper: '#FBF6F1' },
     blockedDates: [],
     contact: {

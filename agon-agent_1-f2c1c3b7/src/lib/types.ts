@@ -68,6 +68,8 @@ export interface ProviderInstance {
   formulas: Formula[]
   options: Option[]
   depositPercent: number
+  /** Rayon de déplacement inclus dans les formules, en km. */
+  travelIncludedKm: number
   accessCode: string
   palette: Palette
   blockedDates: string[]
@@ -80,6 +82,7 @@ export interface ProviderInstance {
 
 export type BookingStatus =
   | 'proposee'
+  | 'date_a_accepter'
   | 'confirmee'
   | 'acompte_paye'
   | 'refusee'
@@ -145,6 +148,10 @@ export interface Booking {
   }
   timeline: TimelineEntry[]
   note?: string
+  /** Incrémenté à chaque ajustement du devis ; protège le paiement d'un montant obsolète. */
+  quoteVersion: number
+  /** Identifiant de soumission côté client : empêche les doublons en cas de re-clic. */
+  requestId?: string
 }
 
 export interface TemplateDef {
